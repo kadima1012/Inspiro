@@ -54,7 +54,3 @@ public/ : fichiers accessibles depuis le navigateur.
 database/migrations et database/seeders : gestion base de données.
 
 storage/ : fichiers uploadés et logs.
-
-Auteur
-
-Auner Eduard
