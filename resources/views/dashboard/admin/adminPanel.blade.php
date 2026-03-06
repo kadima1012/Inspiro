@@ -1,432 +1,314 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Admin') }}
-        </h2>
+        <h2 class="font-bold text-2xl text-slate-900 leading-tight">{{ __('Admin Panel') }}</h2>
     </x-slot>
 
-    <div class="mt-8 bg-white overflow-hidden shadow-xl sm:rounded-lg p-6">
-    @if (session('error'))
-        <div class="bg-red-200 text-red-600 text-center font-bold text-lg p-3 rounded">
-            {{ session('error') }}
-        </div>
-    @endif
+    <div class="py-12" x-data="{
+        activeTab: localStorage.getItem('adminTab') || 'pending',
+        selectedRow: null,
+        selectedTable: null,
+        setTab(tab) {
+            this.activeTab = tab;
+            this.selectedRow = null;
+            localStorage.setItem('adminTab', tab);
+        },
+        selectRow(row, table) {
+            if (this.selectedRow) this.selectedRow.classList.remove('bg-amber-50');
+            this.selectedRow = row;
+            this.selectedTable = table;
+            row.classList.add('bg-amber-50');
+        }
+    }">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            @if (session('error'))
+                <div class="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">{{ session('error') }}</div>
+            @endif
+            @if (session('success'))
+                <div class="mb-6 bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-xl text-sm">{{ session('success') }}</div>
+            @endif
 
-    @if (session('success'))
-        <div class="bg-green-200 text-green-600 text-center font-bold text-lg p-3 rounded">
-            {{ session('success') }}
-        </div>
-    @endif
-
-    <div class="mt-8 bg-white overflow-hidden shadow-xl sm:rounded-lg p-6">
-        <h3 class="text-lg font-semibold mb-2">Pending Artworks Table</h3>
-        <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
-                <tr>
-                    <th class="text-center px-4 py-2">Artwork ID</th>
-                    <th class="text-center px-4 py-2">Title</th>
-                    <th class="text-center px-4 py-2">Description</th>
-                    <th class="text-center px-4 py-2">Artist</th>
-                    <th class="text-center px-4 py-2">Creation Date</th>
-                    <th class="text-center px-4 py-2">Visible</th>
-                    <th class="text-center px-4 py-2">Status</th>
-                    <th class="text-center px-4 py-2">Image</th>
-                    <th class="text-center px-4 py-2">Actions</th>
-
-
-                </tr>
-            </thead>
-            <tbody>
-            @foreach($pendingArtworks as $index => $artwork)
-            <tr class="{{ $index % 2 === 0 ? 'bg-gray-100' : 'bg-white' }}">
-                <td class="text-center px-4 py-2">{{ $artwork->idArt }}</td>
-                <td class="text-center px-4 py-2">{{ $artwork->art_Title }}</td>
-                <td class="text-center px-4 py-2">{{ $artwork->art_Description }}</td>
-                <td class="text-center px-4 py-2">{{ $artwork->artist->artist_name }}</td>
-                <td class="text-center px-4 py-2">{{ $artwork->art_creation_date }}</td>
-                <td class="text-center px-4 py-2">{{ $artwork->art_Visible }}</td>
-                <td class="text-center px-4 py-2">{{ $artwork->art_Status }}</td>
-                <td class="text-center px-4 py-2">
-                    @if($artwork->filepath)
-                        <img src="{{ asset(Storage::url($artwork->filepath)) }}" alt="Artwork Image" class="w-16 h-16">
-                    @else
-                        No Image
-                    @endif
-                </td>
-                <td class="text-center px-4 py-2">
-                    <button class="bg-red-600 text-white px-4 py-2 rounded-md mr-2" onclick="acceptArtwork('{{ $artwork->idArt }}')">Accept</button>
-                    <button class="bg-red-600 text-white px-4 py-2 rounded-md" onclick="declineArtwork('{{ $artwork->idArt }}')">Decline</button>
-                </td>
-            @endforeach
-
-
-            </tbody>
-        </table>
-
-    </div>
-
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-6">
-                <div class="relative">
-                    <button class="text-sm border-2 border-gray-300 rounded-md p-2" onclick="toggleDropdown()">
-                        {{ __('Select Table') }}
-                        <span class="ml-1">&#9662;</span>
-                    </button>
-                    <div id="dropdownContent" class="hidden absolute bg-white border border-gray-200 mt-2 py-2 w-48 rounded-md shadow-lg z-10">
-                        <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onclick="showUsersTable()">
-                            {{ __('User Table') }}
-                        </a>
-                        <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onclick="showArtistsTable()">
-                            {{ __('Artist Table') }}
-                        </a>
-                        <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onclick="showArtworksTable()">
-                            {{ __('Artwork Table') }}
-                        </a>
-                        <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onclick="showShopListsTable()">
-                            {{ __('Shoplist Table') }}
-                        </a>
-                        <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onclick="showOrdersTable()">
-                            {{ __('Orders Table') }}
-                        </a>
-
-                    </div>
+            <!-- Tab Navigation -->
+            <div class="bg-white rounded-xl shadow-lg mb-6 overflow-hidden">
+                <div class="flex flex-wrap border-b border-slate-200">
+                    <button @click="setTab('pending')" :class="activeTab === 'pending' ? 'text-amber-600 border-b-2 border-amber-500 bg-amber-50' : 'text-slate-500 hover:text-slate-700'" class="px-5 py-3 text-sm font-medium transition-all duration-300">Pending</button>
+                    <button @click="setTab('users')" :class="activeTab === 'users' ? 'text-amber-600 border-b-2 border-amber-500 bg-amber-50' : 'text-slate-500 hover:text-slate-700'" class="px-5 py-3 text-sm font-medium transition-all duration-300">Users</button>
+                    <button @click="setTab('artists')" :class="activeTab === 'artists' ? 'text-amber-600 border-b-2 border-amber-500 bg-amber-50' : 'text-slate-500 hover:text-slate-700'" class="px-5 py-3 text-sm font-medium transition-all duration-300">Artists</button>
+                    <button @click="setTab('artworks')" :class="activeTab === 'artworks' ? 'text-amber-600 border-b-2 border-amber-500 bg-amber-50' : 'text-slate-500 hover:text-slate-700'" class="px-5 py-3 text-sm font-medium transition-all duration-300">Artworks</button>
+                    <button @click="setTab('shop')" :class="activeTab === 'shop' ? 'text-amber-600 border-b-2 border-amber-500 bg-amber-50' : 'text-slate-500 hover:text-slate-700'" class="px-5 py-3 text-sm font-medium transition-all duration-300">Shop</button>
+                    <button @click="setTab('orders')" :class="activeTab === 'orders' ? 'text-amber-600 border-b-2 border-amber-500 bg-amber-50' : 'text-slate-500 hover:text-slate-700'" class="px-5 py-3 text-sm font-medium transition-all duration-300">Orders</button>
                 </div>
+            </div>
 
-                <div class="mt-8">
-                    <div id="usersTable" class="hidden">
-                        <h3 class="text-lg font-semibold mb-2">User Table</h3>
-                        <button class="bg-red-600 text-white px-4 py-2 rounded-md mb-2" onclick="openCreateModal('user')">+</button>
-
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="text-center">User ID</th>
-                                    <th class="text-center">First Name</th>
-                                    <th class="text-center">Last Name</th>
-                                    <th class="text-center">Username</th>
-                                    <th class="text-center">Email</th>
-                                    <th class="text-center">Roles</th>
-                                    <th class="text-center">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($users as $user)
-                                <tr onclick="selectRow(this)">
-                                    <td class="text-center">{{ $user->idUser }}</td>
-                                    <td class="text-center">{{ $user->user_first_name }}</td>
-                                    <td class="text-center">{{ $user->user_last_name }}</td>
-                                    <td class="text-center">{{ $user->user_username }}</td>
-                                    <td class="text-center">{{ $user->email }}</td>
-                                    <td class="text-center">
-                                        @foreach($user->roles as $role)
-                                            {{ $role->name }}
-                                            @if (!$loop->last)
-                                                ,
-                                            @endif
-                                        @endforeach
-                                    </td>
-                                    <td class="text-center">
-                                        <button class="bg-red-600 text-white px-4 py-2 rounded-md" onclick="openAssignRoleModal('{{ $user->idUser }}', '{{ $user->user_first_name }}', '{{ $user->user_last_name }}', '{{ $user->user_username }}', '{{ $user->email }}')">Assign Role</button>
-                                    </td>
-
-
-                                </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                        <div class="mt-4 mb-6">
-                            {{ $users->links() }}
-                        </div>
-                    </div>
-
-                    <div id="artistsTable" class="hidden mt-8">
-                        <h3 class="text-lg font-semibold mb-2">Artists Table</h3>
-                        <button class="bg-red-600 text-white px-4 py-2 rounded-md mb-2" onclick="openCreateModal('artist')">+</button>
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="text-center">Artist ID</th>
-                                    <th class="text-center">First Name</th>
-                                    <th class="text-center">Last Name</th>
-                                    <th class="text-center">Description</th>
-                                    <th class="text-center">Experience</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($artists as $artist)
-                                <tr onclick="selectRow(this)" data-id="{{ $artist->idArtist }}">
-                                    <td class="text-center">{{ $artist->idArtist }}</td>
-                                    <td class="text-center">{{ $artist->artist_first_name }}</td>
-                                    <td class="text-center">{{ $artist->artist_last_name }}</td>
-                                    <td class="text-center">{{ $artist->artist_description }}</td>
-                                    <td class="text-center">{{ $artist->artist_experience }}</td>
-                                </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                        <div class="mt-4 mb-6">
-                            {{ $artists->links() }}
-                        </div>
-                    </div>
-
-
-                    <div id="artworksTable" class="hidden mt-8">
-                        <h3 class="text-lg font-semibold mb-2">Artworks Table</h3>
-                        <button class="bg-red-600 text-white px-4 py-2 rounded-md mb-2" onclick="openCreateModal('artwork')">+</button>
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="text-center">Artwork ID</th>
-                                    <th class="text-center">Title</th>
-                                    <th class="text-center">Description</th>
-                                    <th class="text-center">Artist First Name</th>
-                                    <th class="text-center">Artist Last Name</th>
-                                    <th class="text-center">Creation Date</th>
-                                    <th class="text-center">Visible</th>
-                                    <th class="text-center">Status</th>
-                                    <th class="text-center">Type</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($artworks as $artwork)
-                                <tr onclick="selectRow(this)" data-id="{{ $artwork->idArt }}">
-                                    <td class="text-center">{{ $artwork->idArt }}</td>
-                                    <td class="text-center">{{ $artwork->art_Title }}</td>
-                                    <td class="text-center">{{ $artwork->art_Description }}</td>
-                                    <td class="text-center">{{ $artwork->artist->artist_first_name }}</td>
-                                    <td class="text-center">{{ $artwork->artist->artist_last_name }}</td>
-                                    <td class="text-center">{{ $artwork->art_creation_date }}</td>
-                                    <td class="text-center">{{ $artwork->art_Visible }}</td>
-                                    <td class="text-center">{{ $artwork->art_Status }}</td>
-                                    <td class="text-center">{{ $artwork->artworktype->type_name }}</td>
-                                </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                        <div class="mt-4 mb-6">
-                            {{ $artworks->links() }}
-                        </div>
-                    </div>
-
-                    <div id="shopListsTable" class="hidden mt-8">
-                        <h3 class="text-lg font-semibold mb-2">Shoplist Table</h3>
-                        <button class="bg-red-600 text-white px-4 py-2 rounded-md mb-2" onclick="openCreateModal('shoplists')">+</button>
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="text-center">Artist</th>
-                                    <th class="text-center">Art Title</th>
-                                    <th class="text-center">Image</th>
-                                    <th class="text-center">Item Price</th>
-                                    <th class="text-center">Quantity for Sale</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($shoplists as $item)
-                                <tr onclick="selectRow(this)" data-id="{{ $item->id }}">
-                                    <td class="text-center">{{ $item->artist->artist_first_name }} {{ $item->artist->artist_last_name }}</td>
-                                    <td class="text-center">{{ $item->artwork->art_Title }}</td>
-                                    <td class="text-center px-4 py-2">
-                                        @if($artwork->filepath)
-                                            <img src="{{ asset(Storage::url($item->artwork->filepath)) }}" alt="Artwork Image" class="w-16 h-16">
-                                        @else
-                                            No Image
-                                        @endif
-                                    </td>
-                                    <td class="text-center">{{ $item->item_price }}</td>
-                                    <td class="text-center">{{ $item->quantity_for_sale }}</td>
-                                </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                        <div class="mt-4 mb-6">
-                            {{ $shoplists->links() }}
-                        </div>
-                    </div>
-
-                    <div id="ordersTable" class="hidden mt-8">
-                        <h3 class="text-lg font-semibold mb-2">Orders Table</h3>
-                        <button class="bg-red-600 text-white px-4 py-2 rounded-md mb-2" onclick="openCreateModal('order')">+</button>
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="text-center">Order ID</th>
-                                    <th class="text-center">User</th>
-                                    <th class="text-center">Status</th>
-                                    <th class="text-center">Details</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($orders as $order)
-                                <tr onclick="selectRow(this)" data-id="{{ $order->idOrder }}">
-                                    <td class="text-center">{{ $order->idOrder }}</td>
-                                    <td class="text-center">{{ $order->user->user_username }}</td>
-                                    <td class="text-center">{{ $order->order_status }}</td>
-                                    <td class="text-center">{{ $order->order_details }}</td>
-                                </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                        <div class="mt-4 mb-6">
-                            {{ $orders->links() }}
-                        </div>
-                    </div>
-
-
-
-
-
-
-                    <div id="editButton" class="hidden mt-4">
-                        <button class="bg-red-600 text-white px-4 py-2 rounded-md" onclick="editSelected()">Edit Selected</button>
-                    </div>
-                    <div id="deleteButton" class="hidden mt-4">
-                        <button class="bg-red-600 text-white px-4 py-2 rounded-md" onclick="deleteSelected()">Delete Selected</button>
-                    </div>
-
+            <!-- Pending Artworks Tab -->
+            <div x-show="activeTab === 'pending'" x-transition class="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div class="p-6 border-b border-slate-100">
+                    <h3 class="text-lg font-bold text-slate-900">Pending Artworks</h3>
                 </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-slate-200">
+                        <thead class="bg-slate-50">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">ID</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Title</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Artist</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Date</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Status</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Image</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            @foreach($pendingArtworks as $artwork)
+                            <tr class="hover:bg-slate-50 transition-colors duration-200">
+                                <td class="px-4 py-3 text-sm text-slate-700">{{ $artwork->idArt }}</td>
+                                <td class="px-4 py-3 text-sm font-medium text-slate-900">{{ $artwork->art_Title }}</td>
+                                <td class="px-4 py-3 text-sm text-slate-700">{{ $artwork->artist->artist_name }}</td>
+                                <td class="px-4 py-3 text-sm text-slate-500">{{ $artwork->art_creation_date }}</td>
+                                <td class="px-4 py-3"><span class="text-xs font-medium px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800">{{ $artwork->art_Status }}</span></td>
+                                <td class="px-4 py-3">
+                                    @if($artwork->filepath)
+                                        <img src="{{ asset(Storage::url($artwork->filepath)) }}" alt="Artwork" class="w-12 h-12 rounded-lg object-cover">
+                                    @else
+                                        <span class="text-xs text-slate-400">No image</span>
+                                    @endif
+                                </td>
+                                <td class="px-4 py-3">
+                                    <div class="flex gap-2">
+                                        <button onclick="acceptArtwork('{{ $artwork->idArt }}')" class="bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-300">Accept</button>
+                                        <button onclick="declineArtwork('{{ $artwork->idArt }}')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-300">Decline</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Users Tab -->
+            <div x-show="activeTab === 'users'" x-transition class="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+                    <h3 class="text-lg font-bold text-slate-900">Users</h3>
+                    <button onclick="openCreateModal('user')" class="bg-amber-500 hover:bg-amber-600 text-slate-900 font-medium px-4 py-2 rounded-lg text-sm transition-all duration-300">+ Create User</button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-slate-200">
+                        <thead class="bg-slate-50">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">ID</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">First Name</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Last Name</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Username</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Email</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Roles</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            @foreach($users as $user)
+                            <tr class="hover:bg-slate-50 transition-colors duration-200 cursor-pointer" onclick="selectRow(this)">
+                                <td class="px-4 py-3 text-sm text-slate-700">{{ $user->idUser }}</td>
+                                <td class="px-4 py-3 text-sm text-slate-700">{{ $user->user_first_name }}</td>
+                                <td class="px-4 py-3 text-sm text-slate-700">{{ $user->user_last_name }}</td>
+                                <td class="px-4 py-3 text-sm font-medium text-slate-900">{{ $user->user_username }}</td>
+                                <td class="px-4 py-3 text-sm text-slate-500">{{ $user->email }}</td>
+                                <td class="px-4 py-3">
+                                    @foreach($user->roles as $role)
+                                        <span class="inline-block text-xs font-medium px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800 mr-1">{{ $role->name }}</span>
+                                    @endforeach
+                                </td>
+                                <td class="px-4 py-3">
+                                    <button onclick="event.stopPropagation(); openAssignRoleModal('{{ $user->idUser }}', '{{ $user->user_first_name }}', '{{ $user->user_last_name }}', '{{ $user->user_username }}', '{{ $user->email }}')" class="bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-300">Assign Role</button>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                <div class="p-4 border-t border-slate-100">{{ $users->links() }}</div>
+            </div>
+
+            <!-- Artists Tab -->
+            <div x-show="activeTab === 'artists'" x-transition class="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+                    <h3 class="text-lg font-bold text-slate-900">Artists</h3>
+                    <button onclick="openCreateModal('artist')" class="bg-amber-500 hover:bg-amber-600 text-slate-900 font-medium px-4 py-2 rounded-lg text-sm transition-all duration-300">+ Create Artist</button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-slate-200">
+                        <thead class="bg-slate-50">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">ID</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">First Name</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Last Name</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Description</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Experience</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            @foreach($artists as $artist)
+                            <tr class="hover:bg-slate-50 transition-colors duration-200 cursor-pointer" onclick="selectRow(this)" data-id="{{ $artist->idArtist }}">
+                                <td class="px-4 py-3 text-sm text-slate-700">{{ $artist->idArtist }}</td>
+                                <td class="px-4 py-3 text-sm text-slate-700">{{ $artist->artist_first_name }}</td>
+                                <td class="px-4 py-3 text-sm text-slate-700">{{ $artist->artist_last_name }}</td>
+                                <td class="px-4 py-3 text-sm text-slate-500 max-w-xs truncate">{{ $artist->artist_description }}</td>
+                                <td class="px-4 py-3 text-sm text-slate-700">{{ $artist->artist_experience }}</td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                <div class="p-4 border-t border-slate-100">{{ $artists->links() }}</div>
+            </div>
+
+            <!-- Artworks Tab -->
+            <div x-show="activeTab === 'artworks'" x-transition class="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+                    <h3 class="text-lg font-bold text-slate-900">Artworks</h3>
+                    <button onclick="openCreateModal('artwork')" class="bg-amber-500 hover:bg-amber-600 text-slate-900 font-medium px-4 py-2 rounded-lg text-sm transition-all duration-300">+ Create Artwork</button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-slate-200">
+                        <thead class="bg-slate-50">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">ID</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Title</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Description</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Artist</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Date</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Visible</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Status</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Type</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            @foreach($artworks as $artwork)
+                            <tr class="hover:bg-slate-50 transition-colors duration-200 cursor-pointer" onclick="selectRow(this)" data-id="{{ $artwork->idArt }}">
+                                <td class="px-4 py-3 text-sm text-slate-700">{{ $artwork->idArt }}</td>
+                                <td class="px-4 py-3 text-sm font-medium text-slate-900">{{ $artwork->art_Title }}</td>
+                                <td class="px-4 py-3 text-sm text-slate-500 max-w-xs truncate">{{ $artwork->art_Description }}</td>
+                                <td class="px-4 py-3 text-sm text-slate-700">{{ $artwork->artist->artist_first_name }} {{ $artwork->artist->artist_last_name }}</td>
+                                <td class="px-4 py-3 text-sm text-slate-500">{{ $artwork->art_creation_date }}</td>
+                                <td class="px-4 py-3 text-sm text-slate-700">{{ $artwork->art_Visible }}</td>
+                                <td class="px-4 py-3">
+                                    @php
+                                        $sColors = ['Active' => 'bg-emerald-100 text-emerald-800', 'Pending' => 'bg-amber-100 text-amber-800', 'Declined' => 'bg-red-100 text-red-800'];
+                                    @endphp
+                                    <span class="text-xs font-medium px-2.5 py-0.5 rounded-full {{ $sColors[$artwork->art_Status] ?? 'bg-slate-100 text-slate-800' }}">{{ $artwork->art_Status }}</span>
+                                </td>
+                                <td class="px-4 py-3 text-sm text-slate-700">{{ $artwork->artworktype->type_name }}</td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                <div class="p-4 border-t border-slate-100">{{ $artworks->links() }}</div>
+            </div>
+
+            <!-- Shop Tab -->
+            <div x-show="activeTab === 'shop'" x-transition class="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+                    <h3 class="text-lg font-bold text-slate-900">Shop Items</h3>
+                    <button onclick="openCreateModal('shoplists')" class="bg-amber-500 hover:bg-amber-600 text-slate-900 font-medium px-4 py-2 rounded-lg text-sm transition-all duration-300">+ Create Item</button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-slate-200">
+                        <thead class="bg-slate-50">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Artist</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Artwork</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Image</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Price</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Qty for Sale</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            @foreach($shoplists as $item)
+                            <tr class="hover:bg-slate-50 transition-colors duration-200 cursor-pointer" onclick="selectRow(this)" data-id="{{ $item->id }}">
+                                <td class="px-4 py-3 text-sm text-slate-700">{{ $item->artist->artist_first_name }} {{ $item->artist->artist_last_name }}</td>
+                                <td class="px-4 py-3 text-sm font-medium text-slate-900">{{ $item->artwork->art_Title }}</td>
+                                <td class="px-4 py-3">
+                                    @if($item->artwork->filepath)
+                                        <img src="{{ asset(Storage::url($item->artwork->filepath)) }}" alt="Artwork" class="w-10 h-10 rounded-lg object-cover">
+                                    @else
+                                        <span class="text-xs text-slate-400">No image</span>
+                                    @endif
+                                </td>
+                                <td class="px-4 py-3 text-sm font-bold text-slate-900">{{ $item->item_price }} &euro;</td>
+                                <td class="px-4 py-3 text-sm text-slate-700">{{ $item->quantity_for_sale }}</td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                <div class="p-4 border-t border-slate-100">{{ $shoplists->links() }}</div>
+            </div>
+
+            <!-- Orders Tab -->
+            <div x-show="activeTab === 'orders'" x-transition class="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+                    <h3 class="text-lg font-bold text-slate-900">Orders</h3>
+                    <button onclick="openCreateModal('order')" class="bg-amber-500 hover:bg-amber-600 text-slate-900 font-medium px-4 py-2 rounded-lg text-sm transition-all duration-300">+ Create Order</button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-slate-200">
+                        <thead class="bg-slate-50">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">ID</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">User</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Status</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Details</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            @foreach($orders as $order)
+                            <tr class="hover:bg-slate-50 transition-colors duration-200 cursor-pointer" onclick="selectRow(this)" data-id="{{ $order->idOrder }}">
+                                <td class="px-4 py-3 text-sm text-slate-700">{{ $order->idOrder }}</td>
+                                <td class="px-4 py-3 text-sm font-medium text-slate-900">{{ $order->user->user_username }}</td>
+                                <td class="px-4 py-3">
+                                    @php
+                                        $oColors = ['Active' => 'bg-emerald-100 text-emerald-800', 'Sent' => 'bg-blue-100 text-blue-800', 'Received' => 'bg-emerald-100 text-emerald-800', 'In Cart' => 'bg-slate-100 text-slate-800', 'Canceled' => 'bg-red-100 text-red-800'];
+                                    @endphp
+                                    <span class="text-xs font-medium px-2.5 py-0.5 rounded-full {{ $oColors[$order->order_status] ?? 'bg-slate-100 text-slate-800' }}">{{ $order->order_status }}</span>
+                                </td>
+                                <td class="px-4 py-3 text-sm text-slate-500 max-w-xs truncate">{{ $order->order_details }}</td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                <div class="p-4 border-t border-slate-100">{{ $orders->links() }}</div>
+            </div>
+
+            <!-- Action Buttons (shown when a row is selected) -->
+            <div id="actionButtons" class="hidden mt-4 flex gap-3">
+                <button onclick="editSelected()" class="bg-slate-700 hover:bg-slate-600 text-white font-medium px-5 py-2.5 rounded-lg text-sm transition-all duration-300">Edit Selected</button>
+                <button onclick="deleteSelected()" class="bg-red-600 hover:bg-red-500 text-white font-medium px-5 py-2.5 rounded-lg text-sm transition-all duration-300">Delete Selected</button>
             </div>
         </div>
     </div>
 
+    @include('dashboard.admin.editModal')
+    @include('dashboard.admin.addRole')
 
-
-<script>
+    @push('scripts')
+    <script>
     let selectedRow = null;
     let selectedTable = null;
 
-document.addEventListener("DOMContentLoaded", function() {
-    const selectedTable = localStorage.getItem('selectedTable');
-    toggleDropdown()
-    if (selectedTable) {
-        switch (selectedTable) {
-            case 'users':
-                showUsersTable();
-                break;
-            case 'artists':
-                showArtistsTable();
-                break;
-            case 'artworks':
-                showArtworksTable();
-                break;
-            case 'shoplists':
-                showShopListsTable();
-                break;
-            case 'orders':
-                showOrdersTable();
-                break;
-            default:
-                showUsersTable();
-        }
-    } else {
-        showUsersTable();
-    }
-});
-
-
-function toggleDropdown() {
-    var dropdown = document.getElementById('dropdownContent');
-    dropdown.classList.toggle('hidden');
-}
-
-function showUsersTable() {
-    hideAllTables();
-    document.getElementById('usersTable').classList.remove('hidden');
-    selectedTable = 'users';
-    selectedRow = null;
-    hideEditButton();
-    toggleDropdown();
-    localStorage.setItem('selectedTable', 'users');
-}
-
-function showArtistsTable() {
-    hideAllTables();
-    document.getElementById('artistsTable').classList.remove('hidden');
-    selectedTable = 'artists';
-    selectedRow = null;
-    hideEditButton();
-    toggleDropdown();
-    localStorage.setItem('selectedTable', 'artists');
-}
-
-function showArtworksTable() {
-    hideAllTables();
-    document.getElementById('artworksTable').classList.remove('hidden');
-    selectedTable = 'artworks';
-    selectedRow = null;
-    hideEditButton();
-    toggleDropdown();
-    localStorage.setItem('selectedTable', 'artworks');
-}
-
-function showShopListsTable() {
-    hideAllTables();
-    document.getElementById('shopListsTable').classList.remove('hidden');
-    selectedTable = 'shoplists';
-    selectedRow = null;
-    hideEditButton();
-    toggleDropdown();
-    localStorage.setItem('selectedTable', 'shoplists');
-}
-
-function showOrdersTable() {
-    hideAllTables();
-    document.getElementById('ordersTable').classList.remove('hidden');
-    selectedTable = 'orders';
-    selectedRow = null;
-    hideEditButton();
-    toggleDropdown();
-    localStorage.setItem('selectedTable', 'orders');
-}
-
-
-    function hideAllTables() {
-        if (selectedRow) {
-            selectedRow.classList.remove('bg-gray-100');
-        }
-        document.getElementById('usersTable').classList.add('hidden');
-        document.getElementById('artistsTable').classList.add('hidden');
-        document.getElementById('artworksTable').classList.add('hidden');
-        document.getElementById('shopListsTable').classList.add('hidden');
-        document.getElementById('ordersTable').classList.add('hidden');
-
-
-    }
-
     function selectRow(row) {
-        if (selectedRow) {
-            selectedRow.classList.remove('bg-gray-100');
-        }
+        if (selectedRow) selectedRow.classList.remove('bg-amber-50');
         selectedRow = row;
-        selectedRow.classList.add('bg-gray-100');
-        showEditButton();
-        showDeleteButton();
+        selectedRow.classList.add('bg-amber-50');
+        const tab = localStorage.getItem('adminTab') || 'users';
+        selectedTable = tab === 'pending' ? 'pending' : tab;
+        document.getElementById('actionButtons').classList.remove('hidden');
     }
 
-    function showEditButton() {
-        document.getElementById('editButton').classList.remove('hidden');
-    }
-
-    function hideEditButton() {
-        document.getElementById('editButton').classList.add('hidden');
-        hideDeleteButton();
-    }
-
-    function showDeleteButton() {
-    document.getElementById('deleteButton').classList.remove('hidden');
-    }
-
-    function hideDeleteButton() {
-        document.getElementById('deleteButton').classList.add('hidden');
-    }
-
-
-function editSelected() {
-    if (selectedRow && selectedTable) {
+    function editSelected() {
+        if (!selectedRow || !selectedTable) return;
         let entityId = selectedRow.cells[0].textContent.trim();
-        let entityType = selectedTable.slice(0, -1);
-
+        let entityType = selectedTable.endsWith('s') ? selectedTable.slice(0, -1) : selectedTable;
         let fields = [];
         switch (selectedTable) {
             case 'users':
@@ -449,14 +331,13 @@ function editSelected() {
                 fields = [
                     { id: 'art_Title', label: 'Title', type: 'text', name: 'art_Title', value: selectedRow.cells[1].textContent.trim() },
                     { id: 'art_Description', label: 'Description', type: 'text', name: 'art_Description', value: selectedRow.cells[2].textContent.trim() },
-                    { id: 'art_creation_date', label: 'Creation Date', type: 'date', name: 'art_creation_date', value: selectedRow.cells[5].textContent.trim() },
-                    { id: 'art_Visible', label: 'Visible', type: 'checkbox', name: 'art_Visible', value: selectedRow.cells[6].textContent.trim() === 'true' ? true : false },
-                    { id: 'art_Status', label: 'Status', type: 'text', name: 'art_Status', value: selectedRow.cells[7].textContent.trim() },
+                    { id: 'art_creation_date', label: 'Creation Date', type: 'date', name: 'art_creation_date', value: selectedRow.cells[4].textContent.trim() },
+                    { id: 'art_Visible', label: 'Visible', type: 'checkbox', name: 'art_Visible', value: selectedRow.cells[5].textContent.trim() === 'true' },
+                    { id: 'art_Status', label: 'Status', type: 'text', name: 'art_Status', value: selectedRow.cells[6].textContent.trim() }
                 ];
-
-
                 break;
-            case 'shoplists':
+            case 'shop':
+                entityType = 'shoplist';
                 fields = [
                     { id: 'quantity_for_sale', label: 'Quantity for Sale', type: 'number', name: 'quantity_for_sale', value: parseInt(selectedRow.cells[4].textContent.trim()) },
                     { id: 'item_price', label: 'Item Price', type: 'number', name: 'item_price', value: parseFloat(selectedRow.cells[3].textContent.trim()) }
@@ -468,20 +349,15 @@ function editSelected() {
                     { id: 'order_details', label: 'Order Details', type: 'text', name: 'order_details', value: selectedRow.cells[3].textContent.trim() }
                 ];
                 break;
-            default:
-                console.log("Unknown table selected");
-                return;
         }
-
         openEditModal('Edit ' + entityType.charAt(0).toUpperCase() + entityType.slice(1), fields, entityType, 'edit', entityId);
     }
-}
 
-
-function deleteSelected() {
-    if (selectedRow && selectedTable) {
+    function deleteSelected() {
+        if (!selectedRow || !selectedTable) return;
         const entityId = selectedRow.cells[0].textContent.trim();
-        const entityType = selectedTable.slice(0, -1);
+        let entityType = selectedTable.endsWith('s') ? selectedTable.slice(0, -1) : selectedTable;
+        if (selectedTable === 'shop') entityType = 'shoplist';
         if (confirm('Are you sure you want to delete this ' + entityType + '?')) {
             fetch(`{{url('/admin/delete')}}/${entityType}/${entityId}`, {
                 method: 'DELETE',
@@ -490,295 +366,166 @@ function deleteSelected() {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                 }
             })
-            .then(response => response.json())
+            .then(r => r.json())
             .then(data => {
-                if (data.success) {
-                    alert(entityType.charAt(0).toUpperCase() + entityType.slice(1) + ' deleted successfully.');
-                    window.location.reload();
-                } else {
-                    alert('Failed to delete ' + entityType + '. Please try again.');
-                    console.error(data.message);
-                }
+                if (data.success) { alert(entityType + ' deleted successfully.'); window.location.reload(); }
+                else { alert('Failed to delete. ' + (data.message || '')); }
             })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('An error occurred while deleting the ' + entityType + '.');
-            });
+            .catch(() => alert('An error occurred.'));
         }
     }
-}
 
+    function openEditModal(title, fields, entityType, action, entityId) {
+        document.getElementById('modal-title').innerText = title;
+        document.getElementById('entity_type').value = entityType;
+        const modalBody = document.getElementById('modal-body');
+        modalBody.innerHTML = '';
+        const form = document.createElement('form');
+        form.id = 'editForm';
+        form.method = 'POST';
+        form.enctype = 'multipart/form-data';
+        form.action = action === 'edit' ? `{{url('/admin/update')}}/${entityType}` : `{{url('/admin/create')}}/${entityType}`;
 
+        const csrf = document.createElement('input');
+        csrf.type = 'hidden'; csrf.name = '_token';
+        csrf.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        form.appendChild(csrf);
 
+        if (action === 'edit') {
+            const idInput = document.createElement('input');
+            idInput.type = 'hidden'; idInput.name = 'id'; idInput.value = entityId;
+            form.appendChild(idInput);
+        }
 
-function openEditModal(title, fields, entityType, action = 'edit', entityId = null) {
-    document.getElementById('modal-title').innerText = title;
-    document.getElementById('entity_type').value = entityType;
-
-    const modalBody = document.getElementById('modal-body');
-    modalBody.innerHTML = '';
-
-    const form = document.createElement('form');
-    form.setAttribute('id', 'editForm');
-    form.setAttribute('method', 'POST');
-    form.setAttribute('enctype', 'multipart/form-data');
-    form.setAttribute('action', action === 'edit' ? `{{url('/admin/update')}}/${entityType}` : `{{url('/admin/create')}}/${entityType}`);
-
-    if (action === 'edit') {
-        const entityIdInput = document.createElement('input');
-        entityIdInput.setAttribute('type', 'hidden');
-        entityIdInput.setAttribute('name', 'id');
-        entityIdInput.setAttribute('value', entityId);
-        form.appendChild(entityIdInput);
-    }
-
-    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-    const csrfInput = document.createElement('input');
-    csrfInput.setAttribute('type', 'hidden');
-    csrfInput.setAttribute('name', '_token');
-    csrfInput.setAttribute('value', csrfToken);
-    form.appendChild(csrfInput);
-
-    fields.forEach(field => {
-    const fieldWrapper = document.createElement('div');
-    fieldWrapper.classList.add('mb-4');
-
-    const label = document.createElement('label');
-    label.classList.add('block', 'text-gray-700', 'text-sm', 'font-bold', 'mb-2');
-    label.setAttribute('for', field.id);
-    label.innerText = field.label;
-    fieldWrapper.appendChild(label);
-
-    if (field.type === 'select') {
-        const select = document.createElement('select');
-        select.classList.add('shadow', 'appearance-none', 'border', 'rounded', 'w-full', 'py-2', 'px-3', 'text-gray-700', 'leading-tight', 'focus:outline-none', 'focus:shadow-outline');
-        select.setAttribute('id', field.id);
-        select.setAttribute('name', field.name);
-
-        // Add options to select
-        field.options.forEach(option => {
-            const optionElement = document.createElement('option');
-            optionElement.setAttribute('value', option.toLowerCase());
-            optionElement.textContent = option;
-            select.appendChild(optionElement);
-        });
-            fieldWrapper.appendChild(select);
-        } else {
-            const input = document.createElement('input');
-            input.classList.add('shadow', 'appearance-none', 'border', 'rounded', 'w-full', 'py-2', 'px-3', 'text-gray-700', 'leading-tight', 'focus:outline-none', 'focus:shadow-outline');
-            input.setAttribute('id', field.id);
-            input.setAttribute('type', field.type);
-            input.setAttribute('name', field.name);
-            input.setAttribute('value', field.value);
-
-            if (field.type === 'file') {
-                input.setAttribute('accept', 'image/*');
+        fields.forEach(field => {
+            const wrap = document.createElement('div');
+            wrap.className = 'mb-4';
+            const label = document.createElement('label');
+            label.className = 'block text-sm font-medium text-slate-700 mb-1';
+            label.textContent = field.label;
+            wrap.appendChild(label);
+            if (field.type === 'select') {
+                const sel = document.createElement('select');
+                sel.className = 'w-full rounded-lg border-slate-300 focus:border-amber-500 focus:ring-amber-500';
+                sel.name = field.name; sel.id = field.id;
+                field.options.forEach(opt => {
+                    const o = document.createElement('option');
+                    o.value = opt.toLowerCase(); o.textContent = opt;
+                    sel.appendChild(o);
+                });
+                wrap.appendChild(sel);
+            } else {
+                const input = document.createElement('input');
+                input.className = 'w-full rounded-lg border-slate-300 focus:border-amber-500 focus:ring-amber-500';
+                input.type = field.type; input.name = field.name; input.id = field.id; input.value = field.value;
+                if (field.type === 'file') input.accept = 'image/*';
+                wrap.appendChild(input);
             }
-            fieldWrapper.appendChild(input);
-        }
-        form.appendChild(fieldWrapper);
-    });
+            form.appendChild(wrap);
+        });
+        modalBody.appendChild(form);
+        document.getElementById('editModal').classList.remove('hidden');
+    }
 
-    modalBody.appendChild(form);
-    document.getElementById('editModal').classList.remove('hidden');
-}
-
-
-
-
-function openCreateModal(entityType) {
-    let fields = [];
-    let title = 'Create ' + entityType.charAt(0).toUpperCase() + entityType.slice(1);
-
-    switch (entityType) {
-        case 'user':
-            fields = [
-                { id: 'user_first_name', label: 'First Name', type: 'text', name: 'user_first_name', value: '' },
-                { id: 'user_last_name', label: 'Last Name', type: 'text', name: 'user_last_name', value: '' },
-                { id: 'user_username', label: 'Username', type: 'text', name: 'user_username', value: '' },
-                { id: 'email', label: 'Email', type: 'email', name: 'email', value: '' },
-                { id: 'user_birthdate', label: 'Birthdate', type: 'date', name: 'user_birthdate', value: '' },
-                { id: 'password', label: 'Password', type: 'password', name: 'password', value: '' },
-                { id: 'password_confirmation', label: 'Confirm Password', type: 'password', name: 'password_confirmation', value: '' },
-                { id: 'role', label: 'Role', type: 'select', name: 'role', options: ['Admin', 'Editor', 'User','Artist'] }
-
-            ];
-            break;
+    function openCreateModal(entityType) {
+        let fields = [];
+        let title = 'Create ' + entityType.charAt(0).toUpperCase() + entityType.slice(1);
+        switch (entityType) {
+            case 'user':
+                fields = [
+                    { id: 'user_first_name', label: 'First Name', type: 'text', name: 'user_first_name', value: '' },
+                    { id: 'user_last_name', label: 'Last Name', type: 'text', name: 'user_last_name', value: '' },
+                    { id: 'user_username', label: 'Username', type: 'text', name: 'user_username', value: '' },
+                    { id: 'email', label: 'Email', type: 'email', name: 'email', value: '' },
+                    { id: 'user_birthdate', label: 'Birthdate', type: 'date', name: 'user_birthdate', value: '' },
+                    { id: 'password', label: 'Password', type: 'password', name: 'password', value: '' },
+                    { id: 'password_confirmation', label: 'Confirm Password', type: 'password', name: 'password_confirmation', value: '' },
+                    { id: 'role', label: 'Role', type: 'select', name: 'role', options: ['Admin', 'Editor', 'User', 'Artist'] }
+                ];
+                break;
             case 'artist':
-            const userIdField = {
-                id: 'idUser',
-                label: 'idUser',
-                type: 'text',
-                name: 'user_id',
-                value: ''
-            };
-            fields.push(userIdField);
-            fields.push(
-                { id: 'artist_first_name', label: 'First Name', type: 'text', name: 'artist_first_name', value: '' },
-                { id: 'artist_last_name', label: 'Last Name', type: 'text', name: 'artist_last_name', value: '' },
-                { id: 'artist_description', label: 'Description', type: 'text', name: 'artist_description', value: '' },
-                { id: 'artist_experience', label: 'Experience', type: 'text', name: 'artist_experience', value: '' }
-            );
-            break;
-        case 'artwork':
-            const artistIdField = {
-                id: 'idArtist',
-                label: 'idArtist',
-                type: 'text',
-                name: 'artist_id',
-                value: ''
-            };
-            fields.push(artistIdField);
-            fields.push(
-                { id: 'art_Title', label: 'Title', type: 'text', name: 'art_Title', value: '' },
-                { id: 'art_Description', label: 'Description', type: 'text', name: 'art_Description', value: '' },
-                { id: 'art_creation_date', label: 'Creation Date', type: 'date', name: 'art_creation_date', value: '' },
-                { id: 'art_Visible', label: 'Visible', type: 'checkbox', name: 'art_Visible', value: false },
-                { id: 'art_Status', label: 'Status', type: 'text', name: 'art_Status', value: '' },
-                { id: 'filepath', label: 'Filepath', type: 'file', name: 'filepath', value: '', required: true },
-                { id: 'type', label: 'Type', type: 'select', name: 'type', options: ['Painting', 'Sculpture', 'Photography','Drawing','Digital Art'] },
-                { id: 'quantity', label: 'Quantity', type: 'text', name: 'art_quantity', value: '' }
-
-            );
-            break;
-
-        case 'shoplists':
-            fields = [
-                { id: 'quantity_for_sale', label: 'Quantity for Sale', type: 'number', name: 'quantity_for_sale', value: '' },
-                { id: 'item_price', label: 'Item Price', type: 'text', name: 'item_price', value: '' }
-            ];
-            break;
-
-        case 'order':
-            fields = [
-                { id: 'order_status', label: 'Order Status', type: 'text', name: 'order_status', value: '' },
-                { id: 'order_details', label: 'Order Details', type: 'text', name: 'order_details', value: '' }
-            ];
-        break;
-
-        default:
-            console.log("Unknown entity type");
-            return;
+                fields = [
+                    { id: 'idUser', label: 'User ID', type: 'text', name: 'user_id', value: '' },
+                    { id: 'artist_first_name', label: 'First Name', type: 'text', name: 'artist_first_name', value: '' },
+                    { id: 'artist_last_name', label: 'Last Name', type: 'text', name: 'artist_last_name', value: '' },
+                    { id: 'artist_description', label: 'Description', type: 'text', name: 'artist_description', value: '' },
+                    { id: 'artist_experience', label: 'Experience', type: 'text', name: 'artist_experience', value: '' }
+                ];
+                break;
+            case 'artwork':
+                fields = [
+                    { id: 'idArtist', label: 'Artist ID', type: 'text', name: 'artist_id', value: '' },
+                    { id: 'art_Title', label: 'Title', type: 'text', name: 'art_Title', value: '' },
+                    { id: 'art_Description', label: 'Description', type: 'text', name: 'art_Description', value: '' },
+                    { id: 'art_creation_date', label: 'Creation Date', type: 'date', name: 'art_creation_date', value: '' },
+                    { id: 'art_Visible', label: 'Visible', type: 'checkbox', name: 'art_Visible', value: false },
+                    { id: 'art_Status', label: 'Status', type: 'text', name: 'art_Status', value: '' },
+                    { id: 'filepath', label: 'Image', type: 'file', name: 'filepath', value: '' },
+                    { id: 'type', label: 'Type', type: 'select', name: 'type', options: ['Painting', 'Sculpture', 'Photography', 'Drawing', 'Digital Art'] },
+                    { id: 'quantity', label: 'Quantity', type: 'text', name: 'art_quantity', value: '' }
+                ];
+                break;
+            case 'shoplists':
+                fields = [
+                    { id: 'quantity_for_sale', label: 'Quantity for Sale', type: 'number', name: 'quantity_for_sale', value: '' },
+                    { id: 'item_price', label: 'Item Price', type: 'text', name: 'item_price', value: '' }
+                ];
+                break;
+            case 'order':
+                fields = [
+                    { id: 'order_status', label: 'Order Status', type: 'text', name: 'order_status', value: '' },
+                    { id: 'order_details', label: 'Order Details', type: 'text', name: 'order_details', value: '' }
+                ];
+                break;
+        }
+        openEditModal(title, fields, entityType, 'create');
     }
 
-    openEditModal(title, fields, entityType, 'create');
-}
-
-
-
-function closeModal() {
-    document.getElementById('editModal').classList.add('hidden');
-    resetState();
-}
-
-function resetState() {
-    if (selectedRow) {
-        selectedRow.classList.remove('bg-gray-100');
+    function closeModal() {
+        document.getElementById('editModal').classList.add('hidden');
+        document.getElementById('assignRoleModal').classList.add('hidden');
+        if (selectedRow) selectedRow.classList.remove('bg-amber-50');
+        selectedRow = null;
+        document.getElementById('actionButtons').classList.add('hidden');
+        window.location.reload();
     }
-    selectedRow = null;
-    hideEditButton();
-    hideDeleteButton();
-    window.location.reload();
 
-}
+    function acceptArtwork(artworkId) {
+        fetch(`{{ url('/admin/updateStatus') }}/${artworkId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content') },
+            body: JSON.stringify({ art_Status: 'Active' })
+        }).then(r => { if (r.ok) { alert('Artwork accepted.'); window.location.reload(); } else { alert('Failed.'); } }).catch(() => alert('Error.'));
+    }
 
-function acceptArtwork(artworkId) {
-    fetch(`{{ url('/admin/updateStatus') }}/${artworkId}`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-        },
-        body: JSON.stringify({
-            art_Status: 'Active'
-        })
-    })
-    .then(response => {
-        if (response.ok) {
-            alert('Artwork accepted successfully.');
-            window.location.reload();
-        } else {
-            alert('Failed to accept artwork. Please try again.');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('An error occurred while accepting artwork.');
-    });
-}
+    function declineArtwork(artworkId) {
+        fetch(`{{ url('/admin/updateStatus') }}/${artworkId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content') },
+            body: JSON.stringify({ art_Status: 'Declined' })
+        }).then(r => { if (r.ok) { alert('Artwork declined.'); window.location.reload(); } else { alert('Failed.'); } }).catch(() => alert('Error.'));
+    }
 
-function declineArtwork(artworkId) {
-    fetch(`{{ url('/admin/updateStatus') }}/${artworkId}`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-        },
-        body: JSON.stringify({
-            art_Status: 'Declined'
-        })
-    })
-    .then(response => {
-        if (response.ok) {
-            alert('Artwork declined successfully.');
-            window.location.reload();
-        } else {
-            alert('Failed to decline artwork. Please try again.');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('An error occurred while declining artwork.');
-    });
-}
-
-function openAssignRoleModal(userId, firstName, lastName, username, email) {
-    document.getElementById('assignRoleModal').classList.remove('hidden');
-    document.getElementById('modal_user_first_name').textContent = firstName;
-    document.getElementById('modal_user_last_name').textContent = lastName;
-    document.getElementById('modal_user_username_value').textContent = username;
-    document.getElementById('modal_user_email').textContent = email;
-    document.getElementById('userId').value = userId;
-}
-
+    function openAssignRoleModal(userId, firstName, lastName, username, email) {
+        document.getElementById('assignRoleModal').classList.remove('hidden');
+        document.getElementById('modal_user_first_name').textContent = firstName;
+        document.getElementById('modal_user_last_name').textContent = lastName;
+        document.getElementById('modal_user_username_value').textContent = username;
+        document.getElementById('modal_user_email').textContent = email;
+        document.getElementById('userId').value = userId;
+    }
 
     function assignRole() {
-        var userId = document.getElementById('userId').value;
-        var roleId = document.getElementById('role').value;
-
+        const userId = document.getElementById('userId').value;
+        const roleId = document.getElementById('role').value;
         fetch(`{{url('/assign-role')}}/` + userId, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-            },
-            body: JSON.stringify({
-                role: roleId
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert(data.message);
-                closeModal();
-            } else {
-                alert('Error assigning role: ' + data.message);
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('An error occurred while assigning role.');
-        });
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+            body: JSON.stringify({ role: roleId })
+        }).then(r => r.json()).then(data => {
+            if (data.success) { alert(data.message); closeModal(); } else { alert('Error: ' + data.message); }
+        }).catch(() => alert('Error assigning role.'));
     }
-
-
-</script>
-
-
-
-
-    @include('dashboard.admin.editModal')
-    @include('dashboard.admin.addRole')
-
-
+    </script>
+    @endpush
 </x-app-layout>

@@ -2,31 +2,19 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
-
-
-
 
 class User extends Authenticatable
 {
     use HasFactory, Notifiable, HasRoles;
 
-    /**
-     * The primary key associated with the table.
-     *
-     * @var string
-     */
     protected $primaryKey = 'idUser';
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
         'user_first_name',
         'user_last_name',
@@ -39,46 +27,45 @@ class User extends Authenticatable
         'user_became_artist_date',
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var array<int, string>
-     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    /**
-     * The attributes that should be cast to native types.
-     *
-     * @var array<string, string>
-     */
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
 
-    public function orders()
+    public function orders(): HasMany
     {
         return $this->hasMany(Order::class, 'idUser', 'idUser');
     }
 
-    public function isArtist(){
-        if(Artist::where('idUser', $this->idUser)->firstOrFail()){
-            return true;
-        } else {
-            return false;
-        }
+    public function artist(): HasOne
+    {
+        return $this->hasOne(Artist::class, 'idUser', 'idUser');
     }
 
-    public function getStoredRole()
+    public function lives(): HasMany
+    {
+        return $this->hasMany(Lives::class, 'idUser', 'idUser');
+    }
+
+    public function isArtist(): bool
+    {
+        return Artist::where('idUser', $this->idUser)->exists();
+    }
+
+    public function getStoredRole(): ?\Spatie\Permission\Models\Role
     {
         return $this->roles()->first();
     }
 
-    public function assignRole($role)
+    public function assignRole(...$roles): self
     {
+        $role = $roles[0] ?? null;
+
         if (is_string($role)) {
             $role = \Spatie\Permission\Models\Role::where('name', $role)->firstOrFail();
         }

@@ -2,69 +2,59 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use App\Models\Artwork;
+use App\Http\Requests\StoreArtworkRequest;
+use App\Http\Requests\UpdateArtworkRequest;
 use App\Models\Artist;
-use App\Models\User;
-use App\Models\ShopList;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Redirect;
-use Illuminate\Http\RedirectResponse;
+use App\Models\Artwork;
 use App\Models\ArtworkType;
-use Illuminate\Support\Facades\Log;
+use App\Models\ShopList;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\View\View;
 
 class ArtworkController extends Controller
 {
-    public function create(Request $request)
+    public function create(Request $request): View
     {
         $artist = $request->user();
         $artworkTypes = ArtworkType::all();
+
         return view('artwork.create', compact('artist', 'artworkTypes'));
     }
 
-    public function index()
+    public function index(): View
     {
-        $artworks = Artwork::all();
+        $artworks = Artwork::with('artist', 'artworkType')->get();
 
         return view('artwork.index', compact('artworks'));
     }
 
-    public function store(Request $request)
+    public function store(StoreArtworkRequest $request): RedirectResponse
     {
-        $request->validate([
-            'art_Title' => 'required|string|max:50',
-            'art_Description' => 'required|string|max:512',
-            'art_creation_date' => 'required|date',
-            'art_Visible' => 'required|boolean',
-            'filepath' => 'required|image|max:2048',
-            'art_quantity' => 'required|integer|min:1',
-            'idArtworkType' => 'required|exists:artwork_type,idArtworkType',
-        ]);
-
+        $validated = $request->validated();
         $path = $request->file('filepath')->store('artworks', 'public');
 
-        $user=$request->user();
-        $artist=Artist::where('idUser', $user->idUser)->FirstOrFail();
+        $user = $request->user();
+        $artist = Artist::where('idUser', $user->idUser)->firstOrFail();
 
         Artwork::create([
             'idArtist' => $artist->idArtist,
-            'art_Title' => $request->art_Title,
-            'art_Description' => $request->art_Description,
-            'art_creation_date' => $request->art_creation_date,
-            'art_Visible' => $request->art_Visible,
+            'art_Title' => $validated['art_Title'],
+            'art_Description' => $validated['art_Description'],
+            'art_creation_date' => $validated['art_creation_date'],
+            'art_Visible' => $validated['art_Visible'],
             'filepath' => $path,
-            'art_quantity' => $request->art_quantity,
-            'idArtworkType' => $request->idArtworkType,
+            'art_quantity' => $validated['art_quantity'],
+            'idArtworkType' => $validated['idArtworkType'],
             'art_Status' => 'pending',
         ]);
 
-        return redirect()->route('portfolio', $request->idArtist)->with('success', 'Artwork added successfully');
+        return redirect()->route('portfolio')->with('success', 'Artwork added successfully');
     }
 
-
-
-    public function edit($id)
+    public function edit(int $id): View
     {
         $artwork = Artwork::findOrFail($id);
         $artworkTypes = ArtworkType::all();
@@ -72,29 +62,24 @@ class ArtworkController extends Controller
         return view('artwork.edit', compact('artwork', 'artworkTypes'));
     }
 
-    public function update(Request $request, $id)
+    public function update(UpdateArtworkRequest $request, int $id): RedirectResponse
     {
-        $request->validate([
-            'art_Title' => 'required|string|max:50',
-            'art_Description' => 'required|string|max:512',
-            'art_creation_date' => 'required|date',
-            'art_Visible' => 'required|boolean',
-            'art_quantity' => 'required|integer|min:1',
-            'filepath' => 'image|max:2048',
-            'idArtworkType' => 'required|exists:artwork_type,idArtworkType',
-        ]);
-
+        $validated = $request->validated();
         $artwork = Artwork::findOrFail($id);
-        $artwork->art_Title = $request->art_Title;
-        $artwork->art_Description = $request->art_Description;
-        $artwork->art_creation_date = $request->art_creation_date;
-        $artwork->art_Visible = $request->art_Visible;
-        $artwork->art_quantity = $request->art_quantity;
-        $artwork->idArtworkType = $request->idArtworkType;
+
+        $artwork->art_Title = $validated['art_Title'];
+        $artwork->art_Description = $validated['art_Description'];
+        $artwork->art_creation_date = $validated['art_creation_date'];
+        $artwork->art_Visible = $validated['art_Visible'];
+        $artwork->art_quantity = $validated['art_quantity'];
+        $artwork->idArtworkType = $validated['idArtworkType'];
 
         if ($request->hasFile('filepath') && $request->file('filepath')->isValid()) {
-            $path = $request->file('filepath')->store('artworks', 'public');
-            $artwork->filepath = $path;
+            if ($artwork->filepath && Storage::disk('public')->exists($artwork->filepath)) {
+                Storage::disk('public')->delete($artwork->filepath);
+            }
+
+            $artwork->filepath = $request->file('filepath')->store('artworks', 'public');
         }
 
         $artwork->save();
@@ -102,33 +87,32 @@ class ArtworkController extends Controller
         return redirect()->route('portfolio', $artwork->idArtist)->with('success', 'Artwork updated successfully');
     }
 
-
-
-
-    public function destroy($id)
+    public function destroy(int $id): RedirectResponse
     {
         $artwork = Artwork::findOrFail($id);
+
+        if ($artwork->filepath && Storage::disk('public')->exists($artwork->filepath)) {
+            Storage::disk('public')->delete($artwork->filepath);
+        }
+
         $artwork->delete();
 
         return redirect()->route('portfolio')->with('success', 'Artwork deleted successfully');
     }
 
-
-    public function showAddToMarket($idArt)
+    public function showAddToMarket(int $idArt): View|RedirectResponse
     {
         $artwork = Artwork::findOrFail($idArt);
 
         if ($artwork->art_Status !== 'Active') {
-            return redirect()->route('portfolio')->with('error', 'You can\'t add this artwork because it was not accepted by an admin');
+            return redirect()->route('portfolio')
+                ->with('error', 'You can\'t add this artwork because it was not accepted by an admin');
         }
 
         return view('artwork.showAddToMarket', compact('artwork'));
     }
 
-
-
-
-    public function addToMarket(Request $request, $idArt)
+    public function addToMarket(Request $request, int $idArt): RedirectResponse
     {
         $request->validate([
             'item_price' => 'required|numeric|min:0',
@@ -136,7 +120,6 @@ class ArtworkController extends Controller
         ]);
 
         $user = Auth::user();
-
         $artist = Artist::where('idUser', $user->idUser)->first();
 
         if (!$artist) {
@@ -144,8 +127,8 @@ class ArtworkController extends Controller
         }
 
         $existingItem = ShopList::where('idArt', $idArt)
-                                ->where('idArtist', $artist->idArtist)
-                                ->exists();
+            ->where('idArtist', $artist->idArtist)
+            ->exists();
 
         if ($existingItem) {
             return redirect()->back()->with('error', 'Artwork is already in the market.');
@@ -172,8 +155,7 @@ class ArtworkController extends Controller
         return redirect()->route('portfolio')->with('success', 'Artwork added to market successfully');
     }
 
-
-    public function removeFromMarket($id)
+    public function removeFromMarket(int $id): RedirectResponse
     {
         $user = Auth::user();
         $artist = Artist::where('idUser', $user->idUser)->first();
@@ -183,8 +165,8 @@ class ArtworkController extends Controller
         }
 
         $deletedItem = ShopList::where('idArt', $id)
-                                ->where('idArtist', $artist->idArtist)
-                                ->delete();
+            ->where('idArtist', $artist->idArtist)
+            ->delete();
 
         if ($deletedItem === 0) {
             return redirect()->back()->with('error', 'Artwork is not in the market.');
@@ -193,50 +175,47 @@ class ArtworkController extends Controller
         return redirect()->route('portfolio')->with('success', 'Artwork removed from market successfully');
     }
 
-    public function viewOne($id){
-        $artwork = Artwork::where('idArt', $id)->firstOrFail();
+    public function viewOne(int $id): View
+    {
+        $artwork = Artwork::with('artist', 'artworkType')->where('idArt', $id)->firstOrFail();
+
         return view('home.artwork', compact('artwork'));
     }
 
-    public function createArtwork(Request $request)
+    public function createArtwork(Request $request): RedirectResponse
     {
-        if ($request->hasFile('filepath')) {
-            $file = $request->file('filepath');
+        $request->validate([
+            'filepath' => 'required|image|max:2048',
+            'art_Title' => 'required|string|max:50',
+            'art_Description' => 'required|string|max:512',
+            'art_creation_date' => 'required|date',
+            'art_quantity' => 'required|integer|min:1',
+            'artist_id' => 'required|exists:artist,idArtist',
+            'type' => 'required|string',
+        ]);
 
-            $filePath = $file->store('artworks');
-        } else {
-            return redirect()->back()->with('error', 'Please upload a file.');
-        }
+        $filePath = $request->file('filepath')->store('artworks', 'public');
 
-        $artistId = $request->input('artist_id');
+        $artist = Artist::findOrFail($request->input('artist_id'));
 
-        $artist = Artist::find($artistId);
-
-        if (!$artist) {
-            return redirect()->back()->with('error', 'Artist not found.');
-        }
-
-        $typeName = $request->input('type');
-        $idArtworkType = ArtworkType::getIdByTypeName($typeName);
+        $idArtworkType = ArtworkType::getIdByTypeName($request->input('type'));
 
         if (!$idArtworkType) {
             return redirect()->back()->with('error', 'Artwork type not found.');
         }
 
-        $artwork = new Artwork();
-        $artwork->art_Title = $request->input('art_Title');
-        $artwork->art_Description = $request->input('art_Description');
-        $artwork->art_creation_date = $request->input('art_creation_date');
-        $artwork->art_Visible = $request->input('art_Visible') ? true : false;
-        $artwork->art_Status = $request->input('art_Status');
-        $artwork->idArtist = $artistId;
-        $artwork->idArtworkType = $idArtworkType;
-        $artwork->filepath = $filePath;
-        $artwork->art_quantity = $request->input('art_quantity');
-
-        $artwork->save();
+        Artwork::create([
+            'art_Title' => $request->input('art_Title'),
+            'art_Description' => $request->input('art_Description'),
+            'art_creation_date' => $request->input('art_creation_date'),
+            'art_Visible' => $request->boolean('art_Visible'),
+            'art_Status' => $request->input('art_Status', 'pending'),
+            'idArtist' => $artist->idArtist,
+            'idArtworkType' => $idArtworkType,
+            'filepath' => $filePath,
+            'art_quantity' => $request->input('art_quantity'),
+        ]);
 
         return redirect()->route('adminPanel')->with('success', 'Artwork created successfully.');
     }
 }
-

@@ -1,53 +1,71 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+        <h2 class="font-bold text-2xl text-slate-900 leading-tight">
             {{ __('Blog') }}
         </h2>
     </x-slot>
 
-    <div class="py-12 bg-gray-900 relative">
-        <!-- Background container -->
-        <div class="absolute inset-0 bg-gradient-to-b from-gray-900 to-gray-800 z-0"></div>
-
-        <div class="container mx-auto px-4 py-8 relative z-10 ">
-            
-            <h2 class="text-2xl font-semibold text-gray-200 mb-4 text-center">Discover your inner self</h2>
-
-            <!-- Main Image -->
-            <div class="mb-8 h-96 rounded-lg overflow-hidden shadow-lg">
-                <img src="{{ asset('img/blog1.jpg') }}" alt="Main Image" class="w-full h-full object-cover">
+    <div class="py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <!-- Featured Article Hero -->
+            <div class="relative h-80 sm:h-96 rounded-xl overflow-hidden mb-12 group">
+                <img src="{{ asset('img/blog1.jpg') }}" alt="Featured Article" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+                <div class="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/30 to-transparent"></div>
+                <div class="absolute bottom-0 left-0 p-8">
+                    <span class="inline-block bg-amber-500 text-slate-900 text-xs font-bold px-3 py-1 rounded-full mb-3 uppercase tracking-wider">Featured</span>
+                    <h3 class="text-2xl sm:text-3xl font-bold text-white mb-2">Discover Your Inner Self Through Art</h3>
+                    <p class="text-gray-300 max-w-xl">Explore how the creative process reveals hidden truths about who we are and who we can become.</p>
+                </div>
             </div>
-            <br>
-            
-            <h2 class="text-2xl font-semibold text-gray-200 mb-4 text-center">Featured Articles</h2>
 
-            <!-- Three vertical rectangles -->
-            <div class="flex justify-center space-x-4 mb-8">
-                <!-- Rectangle 1 -->
-                <div class="flex flex-col items-center w-80 bg-gray-100 rounded-lg p-6 shadow-xl transform hover:scale-105 transition duration-300">
-                    <img src="{{ asset('img/blog2.jpg') }}" alt="Icon 1" class="rounded-full mb-4 w-24 h-24 border-4 border-gray-600">
-                    <h3 class="text-indigo-500 text-lg font-semibold mb-2">Inspiration from Nature</h3>
-                    <p class="text-gray-300 text-sm text-center mb-4">Artists find inspiration in the beauty of nature, from mountain landscapes to delicate wildflowers.</p>
-                    <ul class="text-gray-300 text-xs list-disc list-inside mb-4">
-                        <li>Mountain landscapes</li>
-                        <li>Delicate wildflowers</li>
-                        <li>Forests and rivers</li>
-                    </ul>
-                    <p class="text-gray-300 text-xs text-center">Discover more about how <span class="italic font-bold">natural beauty</span> fuels creativity.</p>
+            <!-- Section Title -->
+            <h2 class="text-2xl font-bold text-slate-900 mb-8">Featured Articles</h2>
+
+            <!-- Article Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 group">
+                    <div class="aspect-[4/3] overflow-hidden">
+                        <img src="{{ asset('img/blog2.jpg') }}" alt="Inspiration from Nature" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                    </div>
+                    <div class="p-6">
+                        <span class="text-xs font-semibold text-amber-600 uppercase tracking-wider">Nature</span>
+                        <h3 class="text-lg font-bold text-slate-900 mt-2 mb-3 group-hover:text-amber-600 transition-colors duration-300">Inspiration from Nature</h3>
+                        <p class="text-slate-600 text-sm leading-relaxed mb-4">Artists find inspiration in the beauty of nature, from mountain landscapes to delicate wildflowers and flowing rivers.</p>
+                        <ul class="text-slate-500 text-xs space-y-1 mb-4">
+                            <li class="flex items-center gap-1.5">
+                                <span class="w-1 h-1 bg-amber-500 rounded-full"></span>Mountain landscapes
+                            </li>
+                            <li class="flex items-center gap-1.5">
+                                <span class="w-1 h-1 bg-amber-500 rounded-full"></span>Delicate wildflowers
+                            </li>
+                            <li class="flex items-center gap-1.5">
+                                <span class="w-1 h-1 bg-amber-500 rounded-full"></span>Forests and rivers
+                            </li>
+                        </ul>
+                        <p class="text-xs text-slate-400 italic">Discover more about how natural beauty fuels creativity.</p>
+                    </div>
                 </div>
 
-                <!-- Rectangle 2 -->
-                <div class="flex flex-col items-center w-80 bg-gray-100 rounded-lg p-6 shadow-xl transform hover:scale-105 transition duration-300">
-                    <img src="{{ asset('img/blog3.jpg') }}" alt="Icon 2" class="rounded-full mb-4 w-24 h-24 border-4 border-gray-600">
-                    <h3 class="text-indigo-500 text-lg font-semibold mb-2">Modern Painting Techniques</h3>
-                    <p class="text-gray-300 text-sm text-center mb-4">We explore various modern painting techniques that are revolutionizing the contemporary art world.</p>
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 group">
+                    <div class="aspect-[4/3] overflow-hidden">
+                        <img src="{{ asset('img/blog3.jpg') }}" alt="Modern Painting Techniques" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                    </div>
+                    <div class="p-6">
+                        <span class="text-xs font-semibold text-amber-600 uppercase tracking-wider">Techniques</span>
+                        <h3 class="text-lg font-bold text-slate-900 mt-2 mb-3 group-hover:text-amber-600 transition-colors duration-300">Modern Painting Techniques</h3>
+                        <p class="text-slate-600 text-sm leading-relaxed">We explore various modern painting techniques that are revolutionizing the contemporary art world and pushing boundaries.</p>
+                    </div>
                 </div>
 
-                <!-- Rectangle 3 -->
-                <div class="flex flex-col items-center w-80 bg-gray-100 rounded-lg p-6 shadow-xl transform hover:scale-105 transition duration-300">
-                    <img src="{{ asset('img/blog4.jpeg') }}" alt="Icon 3" class="rounded-full mb-4 w-24 h-24 border-4 border-gray-600">
-                    <h3 class="text-indigo-500 text-lg font-semibold mb-2">Urban Art and Graffiti</h3>
-                    <p class="text-gray-300 text-sm text-center mb-4">Urban art and graffiti have become integral parts of modern culture.</p>
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 group">
+                    <div class="aspect-[4/3] overflow-hidden">
+                        <img src="{{ asset('img/blog4.jpeg') }}" alt="Urban Art and Graffiti" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                    </div>
+                    <div class="p-6">
+                        <span class="text-xs font-semibold text-amber-600 uppercase tracking-wider">Urban</span>
+                        <h3 class="text-lg font-bold text-slate-900 mt-2 mb-3 group-hover:text-amber-600 transition-colors duration-300">Urban Art and Graffiti</h3>
+                        <p class="text-slate-600 text-sm leading-relaxed">Urban art and graffiti have become integral parts of modern culture, transforming cityscapes into open-air galleries.</p>
+                    </div>
                 </div>
             </div>
         </div>

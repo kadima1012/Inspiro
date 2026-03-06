@@ -3,32 +3,31 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use App\Models\Artwork;
 use App\Models\Artist;
 use App\Models\ShopList;
 
 class ShopListTableSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
-    public function run()
+    public function run(): void
     {
-        $artists = Artist::all();
+        $artists = Artist::with('artworks')->get();
 
-        // Check if there are artists
         if ($artists->isEmpty()) {
             $this->command->info('No artists found to populate the "shop_list" table.');
             return;
         }
 
         foreach ($artists as $artist) {
-            $artworks = $artist->artworks->random(4);
+            $artworks = $artist->artworks;
 
-            foreach ($artworks as $artwork) {
-                $price = rand(50, 500);
+            if ($artworks->count() < 3) {
+                continue;
+            }
 
-                $quantityForSale = rand(1, min($artwork->art_quantity, 10)); 
+            $forSale = $artworks->random(min(3, $artworks->count()));
+
+            foreach ($forSale as $artwork) {
+                $maxQty = max(1, $artwork->art_quantity);
 
                 ShopList::updateOrCreate(
                     [
@@ -36,13 +35,13 @@ class ShopListTableSeeder extends Seeder
                         'idArtist' => $artist->idArtist,
                     ],
                     [
-                        'item_price' => $price,
-                        'quantity_for_sale' => $quantityForSale,
+                        'item_price' => rand(25, 500) + (rand(0, 99) / 100),
+                        'quantity_for_sale' => rand(1, min($maxQty, 5)),
                     ]
                 );
             }
         }
 
-        $this->command->info('Seeder for the "shop_list" table has been run successfully!');
+        $this->command->info('Seeded shop list items successfully.');
     }
 }

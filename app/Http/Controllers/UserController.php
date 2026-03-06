@@ -2,170 +2,123 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use App\Models\User;
-use App\Models\ShopList;
-use App\Models\ArtworkType;
+use App\Http\Requests\CreateUserRequest;
 use App\Models\Artist;
 use App\Models\Artwork;
-use App\Models\Role;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
+use App\Models\ArtworkType;
+use App\Models\ShopList;
+use App\Models\User;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\View\View;
+use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
-    public function showProfile($username)
+    public function showProfile(string $username): View
     {
-        // You can fetch the user data from the database using the username
         $user = User::where('user_username', $username)->firstOrFail();
 
-        // Pass the user data to the view
         return view('user.profile', compact('user'));
     }
 
-    public function showGallery($username)
+    public function showGallery(string $username): View
     {
-        // You can fetch the user data from the database using the username
         $user = User::where('user_username', $username)->firstOrFail();
         $artist = Artist::where('idUser', $user->idUser)->first();
 
-        if($artist){
-            $idArtist = $artist->idArtist;
-            $artworks = Artwork::where('art_Visible', '1')
-                                ->where('idArtist', $idArtist)
-                                ->get();
+        if ($artist) {
+            $artworks = Artwork::where('art_Visible', 1)
+                ->where('idArtist', $artist->idArtist)
+                ->get();
+
             return view('user.gallery', compact('artworks', 'user'));
-        }else{
-            return view('user.notAnArtist', compact('user'));
         }
+
+        return view('user.notAnArtist', compact('user'));
     }
 
-    public function showShop($username, Request $request)
+    public function showShop(string $username, Request $request): View
     {
         $artworkTypes = ArtworkType::all();
-        $query = ShopList::query();
-
-        // You can fetch the user data from the database using the username
         $user = User::where('user_username', $username)->firstOrFail();
         $artist = Artist::where('idUser', $user->idUser)->firstOrFail();
 
-        if($request){
-            $type = $request->input('type');
-        }
+        $type = $request->input('type');
+
+        $query = ShopList::query()->where('idArtist', $artist->idArtist);
 
         if ($type) {
             $query->whereHas('artwork', function ($q) use ($type) {
                 $q->where('idArtworkType', $type);
-            })->where('idArtist', $artist->idArtist);
-        }
-        else {
-            $query->where('idArtist', $artist->idArtist);
+            });
         }
 
-        $shopItems = $query->get();
-
-        if (auth()->check()) {
-            $userId = auth()->id();
-        } else {
-            $userId = null;
-        }
+        $shopItems = $query->with('artwork')->get();
+        $userId = auth()->id();
 
         return view('user.shop', compact('shopItems', 'artworkTypes', 'userId', 'user'));
     }
 
-    public function index()
+    public function index(): View
     {
         $users = User::all();
+
         return view('dashboard.adminPanel', compact('users'));
     }
 
-    public function deleteSelectedUsers(Request $request)
+    public function deleteSelectedUsers(Request $request): JsonResponse
     {
-        $selectedUsers = $request->input('selectedUsers');
+        $request->validate([
+            'selectedUsers' => 'required|array',
+            'selectedUsers.*' => 'integer|exists:users,idUser',
+        ]);
 
-        User::whereIn('id', $selectedUsers)->delete();
+        User::whereIn('idUser', $request->input('selectedUsers'))->delete();
 
-        return response()->json(['message' => 'Utilizatorii selectați au fost șterși cu succes.']);
+        return response()->json(['message' => 'Selected users have been deleted successfully.']);
     }
 
-    public function create(Request $request)
+    public function create(CreateUserRequest $request): RedirectResponse
     {
-        Log::info('Create user request received', $request->all());
+        $validated = $request->validated();
+        $validated['password'] = Hash::make($validated['password']);
+        $validated['user_status'] = 1;
 
         try {
-            $validatedData = $request->validate([
-                'user_first_name' => 'required|string|max:255',
-                'user_last_name' => 'required|string|max:255',
-                'user_username' => 'required|string|max:255|unique:users',
-                'email' => 'required|string|email|max:255|unique:users',
-                'user_birthdate' => 'required|date',
-                'password' => 'required|string|min:8|confirmed',
-                'role' => 'required|string|in:admin,editor,user,artist',
-            ]);
-            Log::info('Validation passed', $validatedData);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            Log::error('Validation failed', ['errors' => $e->errors()]);
-            return redirect()->back()->withErrors($e->errors());
-        }
+            $user = User::create($validated);
+            $user->assignRole($validated['role']);
 
-        $validatedData['password'] = Hash::make($validatedData['password']);
-        $validatedData['user_status'] = 1;
-
-        try {
-            $user = User::create($validatedData);
-            Log::info('User created successfully', ['user' => $validatedData]);
-
-            $role = Role::where('name', $validatedData['role'])->firstOrFail();
-            $user->assignRole($role);
-
-            DB::table('model_has_roles')->insert([
-                'role_id' => $role->id,
-                'model_type' => get_class($user),
-                'model_id' => $user->getKey(),
-            ]);
-
-        if ($validatedData['role'] === 'artist' || in_array($validatedData['role'], ['admin', 'editor'])) {
-            Artist::createForUser($user);
-        }
-
+            if (in_array($validated['role'], ['artist', 'admin', 'editor'])) {
+                Artist::createForUser($user);
+            }
         } catch (\Exception $e) {
-            Log::error('Error creating user: ' . $e->getMessage(), ['data' => $validatedData]);
+            Log::error('Error creating user: ' . $e->getMessage());
+
             return redirect()->back()->with('error', 'There was an error creating the user.');
         }
 
         return redirect()->back()->with('success', 'User created successfully!');
     }
 
-    public function assignTheRole(Request $request, $userId)
+    public function assignTheRole(Request $request, int $userId): JsonResponse
     {
         $request->validate([
-            'role' => 'required|string',
+            'role' => 'required|string|in:admin,editor,user,artist',
         ]);
 
         $user = User::findOrFail($userId);
-
         $roleName = $request->input('role');
 
-        $role = Role::where('name', $roleName)->first();
-
-        if (!$role) {
-            $role = new Role();
-            $role->name = $roleName;
-            $role->save();
-        }
-
-        if ($user->roles->count() > 0) {
-            $user->roles()->sync([$role->id]);
-        } else {
-            $user->roles()->attach($role->id);
-        }
+        $role = Role::firstOrCreate(['name' => $roleName]);
+        $user->roles()->sync([$role->id]);
 
         return response()->json([
             'success' => true,
             'message' => 'Role assigned successfully.',
         ]);
     }
-
 }

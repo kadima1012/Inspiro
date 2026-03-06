@@ -10,11 +10,17 @@ class Event extends Model
 {
     use HasFactory;
 
+    protected $primaryKey = 'IdEvents';
+
     protected $fillable = [
         'event_name',
         'event_description',
         'event_date',
         'event_location',
+    ];
+
+    protected $casts = [
+        'event_date' => 'date',
     ];
 
     /**

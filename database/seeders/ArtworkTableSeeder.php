@@ -9,45 +9,56 @@ use App\Models\ArtworkType;
 
 class ArtworkTableSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
-    public function run()
+    public function run(): void
     {
         $artists = Artist::all();
 
-        // Check if there are artists
         if ($artists->isEmpty()) {
-            $this->command->info('No artists found to populate the "artworks" table.');
+            $this->command->info('No artists found to populate the "artwork" table.');
             return;
         }
 
         $artworkTypes = ArtworkType::all();
 
-        // Check if there are artwork types
         if ($artworkTypes->isEmpty()) {
-            $this->command->info('No artwork types found to populate the "artworks" table.');
+            $this->command->info('No artwork types found to populate the "artwork" table.');
             return;
         }
 
-        // Create artworks for each artist with coherent artwork types
-        $artists->each(function ($artist) use ($artworkTypes) {
-            // Create 5 artworks for each artist
-            for ($i = 1; $i <= 5; $i++) {
+        $artworkNames = [
+            'Whispers of Dawn', 'Eternal Horizon', 'Silent Echoes',
+            'Crimson Memories', 'Golden Reverie', 'Midnight Bloom',
+            'Fractured Light', 'Velvet Shadows', 'Azure Dreams',
+            'Dancing Embers', 'Frozen Melody', 'Sapphire Tide',
+            'Amber Solstice', 'Ivory Cascade', 'Obsidian Mirror',
+        ];
+
+        $descriptions = [
+            'A contemplative piece exploring the boundaries between light and shadow.',
+            'An abstract composition inspired by the rhythms of nature.',
+            'A vibrant exploration of color and texture that evokes deep emotion.',
+            'This piece captures the fleeting beauty of a transitional moment.',
+            'A bold statement on the relationship between space and form.',
+        ];
+
+        $artists->each(function ($artist) use ($artworkTypes, $artworkNames, $descriptions) {
+            for ($i = 0; $i < 5; $i++) {
+                $name = $artworkNames[array_rand($artworkNames)];
+
                 Artwork::create([
                     'idArtist' => $artist->idArtist,
                     'idArtworkType' => $artworkTypes->random()->idArtworkType,
-                    'art_Title' => 'Artwork ' . $i . ' by ' . $artist->artist_name,
-                    'art_Description' => 'Description for Artwork ' . $i,
-                    'art_creation_date' => now(),
+                    'art_Title' => $name,
+                    'art_Description' => $descriptions[array_rand($descriptions)],
+                    'art_creation_date' => now()->subDays(rand(30, 365)),
                     'art_Visible' => true,
                     'art_Status' => 'Active',
-                    'filepath' => 'path/to/artwork/' . $i . '.jpg',
-                    'art_quantity' => rand(1, 100), 
+                    'filepath' => 'artworks/painting' . rand(1, 5) . '.jpg',
+                    'art_quantity' => rand(1, 20),
                 ]);
             }
         });
 
-        $this->command->info('Seeder for the "artworks" table has been run successfully!');
+        $this->command->info('Seeded ' . ($artists->count() * 5) . ' artworks successfully.');
     }
 }

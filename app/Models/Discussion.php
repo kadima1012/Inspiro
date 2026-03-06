@@ -9,7 +9,9 @@ class Discussion extends Model
 {
     use HasFactory;
 
-    protected $primaryKey = 'Id_Discussion';
+    protected $table = 'convos';
+
+    protected $primaryKey = 'Id_Conversation';
 
     protected $fillable = [
         'User1_Autorized',
@@ -20,11 +22,16 @@ class Discussion extends Model
 
     public function user()
     {
-        return $this->belongsTo(User::class, 'idUser');
+        return $this->belongsTo(User::class, 'idUser', 'idUser');
     }
 
-    public function user1()
+    public function otherUser()
     {
-        return $this->belongsTo(User::class, 'idUser_1');
+        return $this->belongsTo(User::class, 'idUser_1', 'idUser');
+    }
+
+    public function messages()
+    {
+        return $this->belongsToMany(Msg::class, 'msg_convos', 'Id_Conversation', 'idMessage');
     }
 }

@@ -1,80 +1,55 @@
-<nav x-data="{ open: false }" class="bg-red-600 border-b border-gray-100">
-    <!-- Primary Navigation Menu -->
+<nav x-data="{ open: false }" class="bg-slate-900/95 backdrop-blur-sm border-b border-slate-700 sticky top-0 z-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
             <div class="flex items-center">
                 <!-- Logo -->
-                <div class="flex-shrink-0 flex items-center">
-                    <a href="{{ route('welcome') }}">
-                        <x-application-logo class="block h-9 w-auto fill-current text-gray-800" />
+                <div class="shrink-0 flex items-center">
+                    <a href="{{ route('welcome') }}" class="flex items-center gap-2">
+                        <x-application-logo class="block h-8 w-auto" />
+                        <span class="text-amber-400 font-bold text-xl hidden sm:block">Inspiro</span>
                     </a>
                 </div>
 
                 <!-- Navigation Links -->
-                <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
-                    <x-nav-link :href="route('welcome')" :active="request()->routeIs('welcome')">
-                        &#10094; {{ __('Home') }}
-                    </x-nav-link>
-                    <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                        {{ __('Dashboard') }}
-                    </x-nav-link>
-
-                    <x-nav-link :href="route('profile.edit')" :active="request()->routeIs('profile.edit')">
-                        {{ __('Profile') }}
-                    </x-nav-link>
+                <div class="hidden sm:flex sm:items-center sm:ml-8 space-x-1">
+                    <a href="{{ route('welcome') }}" class="px-3 py-2 rounded-lg text-sm font-medium text-gray-300 hover:text-amber-400 hover:bg-slate-800 transition-all duration-300">
+                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>Home
+                    </a>
+                    <a href="{{ route('dashboard') }}" class="px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300 {{ request()->routeIs('dashboard') ? 'text-amber-400 bg-slate-800' : 'text-gray-300 hover:text-amber-400 hover:bg-slate-800' }}">Dashboard</a>
+                    <a href="{{ route('profile.edit') }}" class="px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300 {{ request()->routeIs('profile.edit') ? 'text-amber-400 bg-slate-800' : 'text-gray-300 hover:text-amber-400 hover:bg-slate-800' }}">Profile</a>
 
                     @if (!Auth::user()->hasRole('user'))
-                        <x-nav-link :href="route('portfolio')" :active="request()->routeIs('portfolio')">
-                            {{ __('My Portfolio') }}
-                        </x-nav-link>
-                        <x-nav-link :href="route('sale')" :active="request()->routeIs('sale')">
-                            {{ __('My Sale') }}
-                        </x-nav-link>
+                        <a href="{{ route('portfolio') }}" class="px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300 {{ request()->routeIs('portfolio') ? 'text-amber-400 bg-slate-800' : 'text-gray-300 hover:text-amber-400 hover:bg-slate-800' }}">Portfolio</a>
+                        <a href="{{ route('sale') }}" class="px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300 {{ request()->routeIs('sale') ? 'text-amber-400 bg-slate-800' : 'text-gray-300 hover:text-amber-400 hover:bg-slate-800' }}">My Sales</a>
                     @endif
 
                     @if (Auth::user()->hasRole('admin'))
-                        <x-nav-link :href="route('adminPanel')" :active="request()->routeIs('adminPanel')">
-                            {{ __('Admin Panel') }}
-                        </x-nav-link>
+                        <a href="{{ route('adminPanel') }}" class="px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300 {{ request()->routeIs('adminPanel') ? 'text-amber-400 bg-slate-800' : 'text-gray-300 hover:text-amber-400 hover:bg-slate-800' }}">Admin</a>
                     @endif
 
-                    <x-nav-link :href="route('orders')" :active="request()->routeIs('orders')">
-                        {{ __('Orders') }}
-                    </x-nav-link>
-                    <!-- Add more menu items here -->
+                    <a href="{{ route('orders') }}" class="px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300 {{ request()->routeIs('orders') ? 'text-amber-400 bg-slate-800' : 'text-gray-300 hover:text-amber-400 hover:bg-slate-800' }}">Orders</a>
+                    <a href="{{ route('messages.index') }}" class="px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300 {{ request()->routeIs('messages.*') ? 'text-amber-400 bg-slate-800' : 'text-gray-300 hover:text-amber-400 hover:bg-slate-800' }}">Messages</a>
                 </div>
             </div>
 
-
-            <!-- Settings Dropdown -->
-            <div class="hidden sm:flex sm:items-center sm:ml-6">
-                <!-- Image for Basket -->
-                <a href="{{ route('basket') }}" class="ml-4 mr-6 flex-shrink-0 flex items-center">
-                    <img src="{{ asset('img/basket.png') }}" class="h-6 w-6" alt="Basket">
+            <!-- Right Side -->
+            <div class="hidden sm:flex sm:items-center sm:ml-6 space-x-3">
+                <a href="{{ route('basket') }}" class="text-gray-300 hover:text-amber-400 transition-colors duration-300 p-2">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"/></svg>
                 </a>
-                &nbsp;
+
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
-                        <button class="flex items-center text-sm font-medium text-gray-500 bg-white rounded-md focus:outline-none focus:text-gray-700 transition duration-150 ease-in-out px-3 py-2 ring-1 ring-black">
-                            <div>{{ Auth::user()->user_username }}</div>
-
-                            <div class="ml-1">
-                                <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                                </svg>
-                            </div>
+                        <button class="flex items-center gap-2 text-sm font-medium text-gray-300 hover:text-white bg-slate-800 rounded-lg px-3 py-2 border border-slate-600 hover:border-slate-500 transition-all duration-300">
+                            <span>{{ Auth::user()->user_username }}</span>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                         </button>
                     </x-slot>
 
                     <x-slot name="content">
-
-                        <!-- Authentication -->
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
-
-                            <x-dropdown-link :href="route('logout')"
-                                onclick="event.preventDefault();
-                                this.closest('form').submit();">
+                            <x-dropdown-link :href="route('logout')" onclick="event.preventDefault(); this.closest('form').submit();">
                                 {{ __('Log Out') }}
                             </x-dropdown-link>
                         </form>
@@ -83,58 +58,49 @@
             </div>
 
             <!-- Hamburger -->
-            <div class="-mr-2 flex items-center sm:hidden">
-                <button @click="open = ! open" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 focus:text-gray-500 transition duration-150 ease-in-out">
+            <div class="flex items-center sm:hidden">
+                <button @click="open = !open" class="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-slate-800 transition-all duration-300">
                     <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                        <path :class="{'hidden': open, 'inline-flex': ! open }" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                        <path :class="{'hidden': ! open, 'inline-flex': open }" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        <path :class="{'hidden': open, 'inline-flex': !open}" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        <path :class="{'hidden': !open, 'inline-flex': open}" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- Responsive Navigation Menu -->
-    <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
-        <div class="pt-2 pb-3 space-y-1">
-            <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                {{ __('Dashboard') }}
-            </x-responsive-nav-link>
+    <!-- Responsive Menu -->
+    <div :class="{'block': open, 'hidden': !open}" class="hidden sm:hidden bg-slate-900 border-t border-slate-700">
+        <div class="px-2 pt-2 pb-3 space-y-1">
+            <a href="{{ route('dashboard') }}" class="block px-3 py-2 rounded-lg text-base font-medium {{ request()->routeIs('dashboard') ? 'text-amber-400 bg-slate-800' : 'text-gray-300 hover:text-amber-400 hover:bg-slate-800' }} transition-all duration-300">Dashboard</a>
+            <a href="{{ route('profile.edit') }}" class="block px-3 py-2 rounded-lg text-base font-medium {{ request()->routeIs('profile.edit') ? 'text-amber-400 bg-slate-800' : 'text-gray-300 hover:text-amber-400 hover:bg-slate-800' }} transition-all duration-300">Profile</a>
+
+            @if (!Auth::user()->hasRole('user'))
+                <a href="{{ route('portfolio') }}" class="block px-3 py-2 rounded-lg text-base font-medium {{ request()->routeIs('portfolio') ? 'text-amber-400 bg-slate-800' : 'text-gray-300 hover:text-amber-400 hover:bg-slate-800' }} transition-all duration-300">Portfolio</a>
+                <a href="{{ route('sale') }}" class="block px-3 py-2 rounded-lg text-base font-medium text-gray-300 hover:text-amber-400 hover:bg-slate-800 transition-all duration-300">My Sales</a>
+            @endif
+
+            @if (Auth::user()->hasRole('admin'))
+                <a href="{{ route('adminPanel') }}" class="block px-3 py-2 rounded-lg text-base font-medium text-gray-300 hover:text-amber-400 hover:bg-slate-800 transition-all duration-300">Admin</a>
+            @endif
+
+            <a href="{{ route('orders') }}" class="block px-3 py-2 rounded-lg text-base font-medium text-gray-300 hover:text-amber-400 hover:bg-slate-800 transition-all duration-300">Orders</a>
+            <a href="{{ route('messages.index') }}" class="block px-3 py-2 rounded-lg text-base font-medium text-gray-300 hover:text-amber-400 hover:bg-slate-800 transition-all duration-300">Messages</a>
         </div>
 
-        <!-- Responsive Settings Options -->
-        <div class="pt-4 pb-1 border-t border-gray-200">
-            <div class="px-4">
-                <div class="font-medium text-base text-gray-800">{{ Auth::user()->user_username }}</div>
-                <div class="font-medium text-sm text-gray-500">{{ Auth::user()->email }}</div>
+        <div class="px-4 py-4 border-t border-slate-700">
+            <div class="mb-3">
+                <p class="text-sm font-medium text-white">{{ Auth::user()->user_username }}</p>
+                <p class="text-xs text-slate-400">{{ Auth::user()->email }}</p>
             </div>
-
-            <x-responsive-nav-link :href="route('basket')">
-                <img src="{{ asset('img/basket.png') }}" class="h-6 w-6" alt="{{ __('Basket') }}">
-            </x-responsive-nav-link>
-
-            <div class="mt-3 space-y-1">
-                <x-responsive-nav-link :href="route('profile.edit')">
-                    {{ __('Profile') }}
-                </x-responsive-nav-link>
-
-                @if (!Auth::user()->hasRole('user'))
-                    <x-responsive-nav-link :href="route('gallery')">
-                        {{ __('My Gallery') }}
-                    </x-responsive-nav-link>
-                @endif
-
-                <!-- Authentication -->
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-
-                    <x-responsive-nav-link :href="route('logout')"
-                            onclick="event.preventDefault();
-                                        this.closest('form').submit();">
-                        {{ __('Log Out') }}
-                    </x-responsive-nav-link>
-                </form>
-            </div>
+            <a href="{{ route('basket') }}" class="flex items-center gap-2 text-gray-300 hover:text-amber-400 mb-3 transition-colors duration-300">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"/></svg>
+                Basket
+            </a>
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button type="submit" class="block w-full text-left text-gray-300 hover:text-white px-3 py-2 text-sm transition-colors duration-300">Log Out</button>
+            </form>
         </div>
     </div>
 </nav>

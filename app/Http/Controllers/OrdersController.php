@@ -2,61 +2,61 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use App\Models\Order;
+use App\Http\Requests\StoreOrderRequest;
 use App\Models\Artwork;
+use App\Models\Order;
 use App\Models\OrderArtwork;
 use App\Models\ShopList;
-use Illuminate\View\View;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\Rule;
-use Illuminate\Support\Facades\Redirect;
-
-
+use Illuminate\View\View;
 
 class OrdersController extends Controller
 {
-    public function index()
+    public function index(): View
     {
         $userId = auth()->id();
 
-        // Obținem doar comenzile cu statusul "in cart" și încărcăm relația cu lucrările de artă
         $orders = Order::where('idUser', $userId)
-                        ->where('order_status', '!=', 'in cart')->orWhereNull('order_status')
-                        ->with(['artworks' => function ($query) {
-                            $query->select('artwork.idArt', 'art_Title', 'art_Description', 'art_quantity', 'quantity_to_order', 'filepath');
-                        }])
-                        ->get();
+            ->where(function ($query) {
+                $query->where('order_status', '!=', Order::STATUS_IN_CART)
+                    ->orWhereNull('order_status');
+            })
+            ->with(['artworks' => function ($query) {
+                $query->select('artwork.idArt', 'art_Title', 'art_Description', 'art_quantity', 'quantity_to_order', 'filepath');
+            }])
+            ->get();
 
         return view('dashboard.orders', ['orders' => $orders]);
     }
 
-    public function showBasket()
+    public function showBasket(): View
     {
         $userId = auth()->id();
 
-        // Obținem doar comenzile cu statusul "in cart" și încărcăm relația cu lucrările de artă
         $orders = Order::where('idUser', $userId)
-                        ->where('order_status', 'in cart')
-                        ->with(['artworks' => function ($query) {
-                            $query->select('artwork.idArt', 'art_Title', 'art_Description', 'art_quantity', 'quantity_to_order', 'filepath');
-                        }])
-                        ->get();
+            ->where('order_status', Order::STATUS_IN_CART)
+            ->with(['artworks' => function ($query) {
+                $query->select('artwork.idArt', 'art_Title', 'art_Description', 'art_quantity', 'quantity_to_order', 'filepath');
+            }])
+            ->get();
 
         return view('dashboard.basket', ['orders' => $orders]);
     }
 
-    public function showConfirmAddToBasket($idArt)
+    public function showConfirmAddToBasket(int $idArt): View
     {
         $artwork = Artwork::findOrFail($idArt);
+
         return view('dashboard.confirm_add_to_basket', compact('artwork'));
     }
 
-
-    public function confirmAddToBasket(Request $request)
+    public function confirmAddToBasket(StoreOrderRequest $request): RedirectResponse
     {
-        $idArt = $request->input('idArt');
+        $idArt = $request->validated('idArt');
+        $quantity = (int) $request->validated('quantity');
         $idArtist = Artwork::where('idArt', $idArt)->firstOrFail()->idArtist;
         $user = Auth::user();
 
@@ -64,83 +64,81 @@ class OrdersController extends Controller
             return redirect()->route('login')->with('error', 'You need to login to add items to basket.');
         }
 
-        $order = Order::where('idUser', $user->idUser)
-                    ->where('idArtist', $idArtist)
-                    ->where('order_status', 'in cart')
-                    ->first();
+        return DB::transaction(function () use ($user, $idArtist, $idArt, $quantity) {
+            $order = Order::where('idUser', $user->idUser)
+                ->where('idArtist', $idArtist)
+                ->where('order_status', Order::STATUS_IN_CART)
+                ->first();
 
-        if (!$order) {
-            $order = Order::create([
-                'idUser' => $user->idUser,
-                'idArtist' => $idArtist,
-                'order_status' => 'in cart',
-                'order_details' => 'Artwork added to basket'
-            ]);
-        }
+            if (!$order) {
+                $order = Order::create([
+                    'idUser' => $user->idUser,
+                    'idArtist' => $idArtist,
+                    'order_status' => Order::STATUS_IN_CART,
+                    'order_details' => 'Artwork added to basket',
+                ]);
+            }
 
-        $quantity = $request->input('quantity');
+            $orderArtwork = OrderArtwork::where('idOrder', $order->idOrder)
+                ->where('idArt', $idArt)
+                ->first();
 
-        $orderArtwork = OrderArtwork::where('idOrder', $order->idOrder)
-                                    ->where('idArt', $idArt)
-                                    ->first();
+            if ($orderArtwork) {
+                OrderArtwork::updateOrderArtwork($idArt, $order->idOrder, $quantity);
+            } else {
+                OrderArtwork::create([
+                    'idOrder' => $order->idOrder,
+                    'idArt' => $idArt,
+                    'quantity_to_order' => $quantity,
+                ]);
+            }
 
-        if ($orderArtwork) {
-            OrderArtwork::updateOrderArtwork($idArt, $order->idOrder, $quantity); // schimbat ordinea parametrilor
-        } else {
-            OrderArtwork::create([
-                'idOrder' => $order->idOrder,
-                'idArt' => $idArt,
-                'quantity_to_order' => $quantity,
-            ]);
-        }
+            ShopList::where('idArt', (int) $idArt)->decrement('quantity_for_sale', $quantity);
 
-        $idArt = (int) $idArt; // Cast $idArt to an integer
-
-        ShopList::where('idArt', $idArt)->update(['quantity_for_sale' => DB::raw("quantity_for_sale - $quantity")]);
-
-        return redirect()->route('shop')->with('success', 'Artwork added to basket successfully.');
+            return redirect()->route('shop')->with('success', 'Artwork added to basket successfully.');
+        });
     }
 
-    public function cancelAddToBasket (Request $request)
+    public function cancelAddToBasket(Request $request): RedirectResponse
     {
-        $idArt=$request->input('idArt');
+        $idArt = $request->input('idArt');
+        $userId = auth()->id();
+
+        return DB::transaction(function () use ($idArt, $userId) {
+            $order = Order::where('idUser', $userId)
+                ->where('order_status', Order::STATUS_IN_CART)
+                ->first();
+
+            $item = OrderArtwork::where('idOrder', $order->idOrder)
+                ->where('idArt', $idArt)
+                ->firstOrFail();
+
+            $quantity = (int) $item->quantity_to_order;
+            $item->delete();
+
+            ShopList::where('idArt', (int) $idArt)->increment('quantity_for_sale', $quantity);
+
+            $items = OrderArtwork::where('idOrder', $order->idOrder)->get();
+
+            if ($items->isEmpty()) {
+                $order->delete();
+            }
+
+            return redirect()->route('basket')->with('success', 'Order canceled successfully.');
+        });
+    }
+
+    public function confirmOrder(Request $request): RedirectResponse
+    {
         $userId = auth()->id();
 
         $order = Order::where('idUser', $userId)
-                      ->where('order_status', 'in cart')
-                      ->first();
-
-        $item = OrderArtwork::where('idOrder', $order->idOrder)->where('idArt', $idArt)->firstOrFail();
-
-        $quantity=$item->quantity_to_order;
-
-        $item->delete();
-
-        $idArt = (int) $idArt; // Cast $idArt to an integer
-
-        ShopList::where('idArt', $idArt)->update(['quantity_for_sale' => DB::raw("quantity_for_sale + $quantity")]);
-
-        $items = OrderArtwork::where('idOrder', $order->idOrder)->get();
-
-        if($items->empty()){
-            $order->delete();
-        }
-
-        return redirect()->route('basket')->with('success', 'Order canceled successfully.');
-    }
-
-    public function confirmOrder(Request $request)
-    {
-        $userId = auth()->id();
-
-        // Găsim comanda cu status "in cart" pentru utilizatorul autentificat
-        $order = Order::where('idUser', $userId)
-                      ->where('idOrder', $request->input('idOrder'))
-                      ->where('order_status', 'in cart')
-                      ->first();
+            ->where('idOrder', $request->input('idOrder'))
+            ->where('order_status', Order::STATUS_IN_CART)
+            ->first();
 
         if ($order) {
-            $order->order_status = 'Active';
+            $order->order_status = Order::STATUS_ACTIVE;
             $order->order_details = 'Order confirmed';
             $order->save();
 
@@ -150,17 +148,17 @@ class OrdersController extends Controller
         return redirect()->route('basket')->with('error', 'No orders to confirm.');
     }
 
-    public function sent(Request $request){
-        $idOrder=$request->input('idOrder');
-        $userId = auth()->id();
+    public function sent(Request $request): RedirectResponse
+    {
+        $idOrder = $request->input('idOrder');
 
         $order = Order::where('idOrder', $idOrder)
-                      ->where('order_status', 'Active')
-                      ->first();
+            ->where('order_status', Order::STATUS_ACTIVE)
+            ->first();
 
         if ($order) {
-            $order->order_status = 'Sent';
-            $order->order_details = 'Order confirmed';
+            $order->order_status = Order::STATUS_SENT;
+            $order->order_details = 'Order sent';
             $order->save();
 
             return redirect()->route('sale')->with('success', 'Order sent successfully.');
@@ -169,17 +167,17 @@ class OrdersController extends Controller
         return redirect()->route('sale')->with('error', 'Order cannot be sent.');
     }
 
-    public function received(Request $request){
-        $idOrder=$request->input('idOrder');
-        $userId = auth()->id();
+    public function received(Request $request): RedirectResponse
+    {
+        $idOrder = $request->input('idOrder');
 
         $order = Order::where('idOrder', $idOrder)
-                      ->where('order_status', 'Sent')
-                      ->first();
+            ->where('order_status', Order::STATUS_SENT)
+            ->first();
 
         if ($order) {
-            $order->order_status = 'Received';
-            $order->order_details = 'Order confirmed';
+            $order->order_status = Order::STATUS_RECEIVED;
+            $order->order_details = 'Order received';
             $order->save();
 
             return redirect()->route('orders')->with('success', 'Order received successfully.');

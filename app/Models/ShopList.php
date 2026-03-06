@@ -4,30 +4,20 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ShopList extends Model
 {
     use HasFactory;
 
-    /**
-     * The table associated with the model.
-     *
-     * @var string
-     */
     protected $table = 'shop_list';
 
-    /**
-     * Indicates if the model should be timestamped.
-     *
-     * @var bool
-     */
     public $timestamps = false;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array
-     */
+    protected $primaryKey = null;
+
+    public $incrementing = false;
+
     protected $fillable = [
         'idArt',
         'idArtist',
@@ -35,46 +25,26 @@ class ShopList extends Model
         'quantity_for_sale',
     ];
 
-    /**
-     * The primary key for the model.
-     *
-     * @var string
-     */
-    protected $primaryKey = null;
-
-    /**
-     * Indicates if the IDs are auto-incrementing.
-     *
-     * @var bool
-     */
-    public $incrementing = false;
-
-    public function artwork()
+    public function artwork(): BelongsTo
     {
         return $this->belongsTo(Artwork::class, 'idArt', 'idArt');
     }
 
-    /**
-     * Get the artist associated with the ShopList.
-     */
-    public function artist()
+    public function artist(): BelongsTo
     {
         return $this->belongsTo(Artist::class, 'idArtist', 'idArtist');
     }
 
-    public function checkQuantityForSale($idArtist)
+    public function checkQuantityForSale(int $idArtist): bool
     {
-        $shopListItems = $this->where('idArtist', $idArtist)->get();
+        $shopListItems = self::where('idArtist', $idArtist)->with('artwork')->get();
 
         foreach ($shopListItems as $item) {
-            $artwork = $item->artwork;
-
-            if ($item->quantity_for_sale > $artwork->art_quantity) {
+            if ($item->artwork && $item->quantity_for_sale > $item->artwork->art_quantity) {
                 return false;
             }
         }
 
         return true;
     }
-
 }

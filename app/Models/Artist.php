@@ -4,7 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Artist extends Model
 {
@@ -12,10 +13,9 @@ class Artist extends Model
 
     protected $table = 'artist';
 
-    protected $primaryKey = 'idArtist'; 
+    protected $primaryKey = 'idArtist';
 
     public $timestamps = false;
-
 
     protected $fillable = [
         'idUser',
@@ -24,15 +24,32 @@ class Artist extends Model
         'artist_description',
         'artist_email',
         'artist_portofolio',
-        'artist_experience'
+        'artist_experience',
     ];
 
-    public function user()
+    protected $appends = ['full_name'];
+
+    public function getFullNameAttribute(): string
+    {
+        return "{$this->artist_first_name} {$this->artist_last_name}";
+    }
+
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'idUser', 'idUser');
     }
 
-    public static function createForUser($user)
+    public function artworks(): HasMany
+    {
+        return $this->hasMany(Artwork::class, 'idArtist', 'idArtist');
+    }
+
+    public function shopList(): HasMany
+    {
+        return $this->hasMany(ShopList::class, 'idArtist', 'idArtist');
+    }
+
+    public static function createForUser(User $user): self
     {
         return self::create([
             'idUser' => $user->idUser,
@@ -45,47 +62,25 @@ class Artist extends Model
         ]);
     }
 
-    public static function deleteById($id)
-    {
-        $artist = self::findOrFail($id);
-
-        $artist->artworks()->delete();
-
-        return $artist->delete();
-    }
-
-    public static function deleteByUserId($idUser)
-    {
-        $artist = self::where('idUser', $idUser)->firstOrFail();
-    
-        return $artist->delete();
-    }
-    
-
-    public static function findIdByUserId($userId)
+    public static function findIdByUserId(int $userId): ?int
     {
         $artist = self::where('idUser', $userId)->first();
-        return $artist ? $artist->idArtist : null;
+
+        return $artist?->idArtist;
     }
 
-    public static function updateArtist($idArtist, $data)
+    public static function updateArtist(int $idArtist, array $data): self
     {
         $artist = self::findOrFail($idArtist);
         $artist->update($data);
+
         return $artist;
     }
 
-    public function artworks()
+    public static function deleteByUserId(int $idUser): bool
     {
-        return $this->hasMany(Artwork::class, 'idArtist', 'idArtist');
+        $artist = self::where('idUser', $idUser)->firstOrFail();
+
+        return $artist->delete();
     }
-
-    public function shopList()
-    {
-        return $this->hasMany(ShopList::class, 'idArtist', 'idArtist');
-    }
-
-
-
-
 }

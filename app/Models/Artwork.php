@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\DB;
-
 
 class Artwork extends Model
 {
@@ -29,73 +32,67 @@ class Artwork extends Model
         'art_quantity',
     ];
 
-    public function artist()
+    public function artist(): BelongsTo
     {
         return $this->belongsTo(Artist::class, 'idArtist', 'idArtist');
     }
 
-    public function findArtistByArtwork($artworkId)
-    {
-        $artwork = $this->find($artworkId);
-
-        if ($artwork) {
-            return $artwork->artist->artist_name;
-        }
-
-        return null;
-    }
-
-    public function findArtistIDByArtwork($artworkId)
-    {
-        $artwork = $this->find($artworkId);
-
-        if ($artwork) {
-            return $artwork->idArtist;
-        }
-
-        return null;
-    }
-
-    public function orders()
+    public function orders(): BelongsToMany
     {
         return $this->belongsToMany(Order::class, 'order_artwork', 'idArt', 'idOrder');
     }
 
-    public function artworkType()
+    public function artworkType(): BelongsTo
     {
         return $this->belongsTo(ArtworkType::class, 'idArtworkType', 'idArtworkType');
     }
 
-    public function getIsInMarketAttribute()
-    {
-        $user = auth()->user();
-        $artist = $this->artist;
-
-        if ($user && $artist) {
-            return $this->shopList()
-                ->where('idArtist', $artist->idArtist)
-                ->exists();
-        }
-
-        return false;
-    }
-
-    /**
-     * Get the shop list items associated with the artwork.
-     */
-    public function shopList()
+    public function shopList(): HasMany
     {
         return $this->hasMany(ShopList::class, 'idArt', 'idArt');
     }
 
-    public static function deleteArtworkByArtist($artistId)
+    public function getIsInMarketAttribute(): bool
+    {
+        return $this->shopList()->exists();
+    }
+
+    public function findArtistByArtwork(int $artworkId): ?string
+    {
+        $artwork = $this->find($artworkId);
+
+        return $artwork?->artist?->full_name;
+    }
+
+    public function findArtistIDByArtwork(int $artworkId): ?int
+    {
+        $artwork = $this->find($artworkId);
+
+        return $artwork?->idArtist;
+    }
+
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->where('art_Status', 'Active');
+    }
+
+    public function scopeVisible(Builder $query): Builder
+    {
+        return $query->where('art_Visible', 1);
+    }
+
+    public function scopePending(Builder $query): Builder
+    {
+        return $query->where('art_Status', 'Pending');
+    }
+
+    public static function deleteArtworkByArtist(int $artistId): bool
     {
         try {
             $artworks = self::where('idArtist', $artistId)->get();
 
             foreach ($artworks as $artwork) {
                 DB::table('shop_list')->where('idArt', $artwork->idArt)->delete();
-
                 $artwork->delete();
             }
 
@@ -105,30 +102,19 @@ class Artwork extends Model
         }
     }
 
-    public function shopItem()
+    public static function markAsDeleted(int $idArt): bool
     {
-        return $this->shopList()->where('idArt', $this->idArt)->firstOrFail();
-    }
+        $artwork = self::find($idArt);
 
-    public static function markAsDeleted($idArt)
-    {
-        try {
-            $artwork = self::find($idArt);
+        if ($artwork) {
+            $artwork->update([
+                'art_Status' => 'deleted',
+                'art_Visible' => 0,
+            ]);
 
-            if ($artwork) {
-                $artwork->update([
-                    'art_Status' => 'deleted',
-                    'art_Visible' => 0,
-                ]);
-                return true;
-            }
-
-            return false;
-        } catch (\Exception $e) {
-            return false;
+            return true;
         }
+
+        return false;
     }
-
-
-
 }

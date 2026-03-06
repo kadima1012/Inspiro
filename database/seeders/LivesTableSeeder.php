@@ -9,30 +9,23 @@ use App\Models\City;
 
 class LivesTableSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
-    public function run()
+    public function run(): void
     {
-
         $users = User::all();
         $cities = City::all();
 
         if ($users->isEmpty() || $cities->isEmpty()) {
-            $this->command->info('Nu există suficienți utilizatori sau orașe pentru a popula tabela "lives".');
+            $this->command->info('No users or cities found to populate the "lives" table.');
             return;
         }
 
         $users->each(function ($user) use ($cities) {
-            $city = $cities->random();
-
             Lives::create([
                 'idUser' => $user->idUser,
-                'idCity' => $city->idCity,
+                'idCity' => $cities->random()->idCity,
             ]);
         });
 
-        $this->command->info('Seeder for the "lives" table has been run successfully!');
-
+        $this->command->info('Seeded user locations successfully.');
     }
 }

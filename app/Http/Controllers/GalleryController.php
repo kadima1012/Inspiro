@@ -2,36 +2,32 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Artist;
-use App\Models\User;
-use Illuminate\Http\Request;
 use App\Models\Artwork;
 use App\Models\ArtworkType;
+use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class GalleryController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request): View
     {
         $artworkTypeId = $request->query('type');
         $artworkTypes = ArtworkType::all();
 
-        if ($artworkTypeId) {
-            $artworks = Artwork::where('art_Visible', '1')
-                               ->where('art_status', 'Active')
-                               ->where('idArtworkType', $artworkTypeId)
-                               ->get();
-        } else {
-            $artworks = Artwork::where('art_Visible', '1')
-                               ->where('art_status', 'Active')
-                               ->get();
-        }
+        $artworks = Artwork::visible()
+            ->active()
+            ->when($artworkTypeId, function ($query, $typeId) {
+                $query->where('idArtworkType', $typeId);
+            })
+            ->with('artist')
+            ->get();
 
         return view('home.gallery', compact('artworks', 'artworkTypes', 'artworkTypeId'));
     }
 
-    public function pending()
+    public function pending(): View
     {
-        $pendingArtworks = Artwork::where('art_status', 'pending')->get();
+        $pendingArtworks = Artwork::pending()->with('artist')->get();
 
         return view('dashboard.pending', compact('pendingArtworks'));
     }

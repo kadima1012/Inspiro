@@ -1,49 +1,44 @@
-<!-- resources/views/artist/edit.blade.php -->
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+        <h2 class="font-bold text-2xl text-slate-900 leading-tight">
             {{ __('Edit Artist Details') }}
         </h2>
     </x-slot>
 
     <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 bg-white border-b border-gray-200">
-                <form method="POST" action="{{ route('artist.update', $artist->idArtist) }}">
-                        @csrf
-                        @method('PUT')
-                        <div>
-                            <label for="idArtist">idArtist:</label>
-                            <input type="text" name="idArtist" value="{{ $artist->idArtist }}">
-                        </div>
-                        <div>
-                            <label for="idUser">idUser:</label>
-                            <input type="text" name="idUser" value="{{ $artist->idUser }}">
-                        </div>
-                        <div>
-                            <label for="artist_first_name">First Name:</label>
-                            <input type="text" name="artist_first_name" value="{{ $artist->artist_first_name }}">
-                        </div>
-                        <div>
-                            <label for="artist_last_name">Last Name:</label>
-                            <input type="text" name="artist_last_name" value="{{ $artist->artist_last_name }}">
-                        </div>
-                        <div>
-                            <label for="artist_description">Description:</label>
-                            <input type="text" name="artist_description" value="{{ $artist->artist_description }}">
-                        </div>
-                        <div>
-                            <label for="artist_experience">Experience:</label>
-                            <input type="text" name="artist_experience" value="{{ $artist->artist_experience }}">
-                        </div>
-                        <div class="mt-4">
-                            <button type="submit" class="bg-red-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                                Update
-                            </button>
-                        </div>
-                    </form>
-                </div>
+        <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="bg-white rounded-xl shadow-lg p-8">
+                <form method="POST" action="{{ route('artist.update', $artist->idArtist) }}" class="space-y-5">
+                    @csrf
+                    @method('PUT')
+
+                    <input type="hidden" name="idArtist" value="{{ $artist->idArtist }}">
+                    <input type="hidden" name="idUser" value="{{ $artist->idUser }}">
+
+                    <div>
+                        <label for="artist_first_name" class="block text-sm font-medium text-slate-700 mb-1">First Name</label>
+                        <input type="text" name="artist_first_name" id="artist_first_name" value="{{ $artist->artist_first_name }}" class="w-full rounded-lg border-slate-300 focus:border-amber-500 focus:ring-amber-500 transition-all duration-300">
+                    </div>
+
+                    <div>
+                        <label for="artist_last_name" class="block text-sm font-medium text-slate-700 mb-1">Last Name</label>
+                        <input type="text" name="artist_last_name" id="artist_last_name" value="{{ $artist->artist_last_name }}" class="w-full rounded-lg border-slate-300 focus:border-amber-500 focus:ring-amber-500 transition-all duration-300">
+                    </div>
+
+                    <div>
+                        <label for="artist_description" class="block text-sm font-medium text-slate-700 mb-1">Description</label>
+                        <textarea name="artist_description" id="artist_description" rows="3" class="w-full rounded-lg border-slate-300 focus:border-amber-500 focus:ring-amber-500 transition-all duration-300">{{ $artist->artist_description }}</textarea>
+                    </div>
+
+                    <div>
+                        <label for="artist_experience" class="block text-sm font-medium text-slate-700 mb-1">Experience (years)</label>
+                        <input type="text" name="artist_experience" id="artist_experience" value="{{ $artist->artist_experience }}" class="w-full rounded-lg border-slate-300 focus:border-amber-500 focus:ring-amber-500 transition-all duration-300">
+                    </div>
+
+                    <button type="submit" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-900 font-semibold py-3 rounded-lg transition-all duration-300">
+                        Update Artist Details
+                    </button>
+                </form>
             </div>
         </div>
     </div>

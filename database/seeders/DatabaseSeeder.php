@@ -2,39 +2,42 @@
 
 namespace Database\Seeders;
 
-use App\Models\ArtworkType;
 use Illuminate\Database\Seeder;
-use App\Models\User;
-use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
-    /**
-     * Seed the application's database.
-     *
-     * @return void
-     */
-    public function run()
+    public function run(): void
     {
-        // Seed the roles and permissions
         $this->call([
+            // 1. Roles & Permissions
             RolesTableSeeder::class,
             PermissionsTableSeeder::class,
             RoleHasPermissionsTableSeeder::class,
+
+            // 2. Users & Artists
             UsersTableSeeder::class,
             ArtistsTableSeeder::class,
-            CountryTableSeeder::class, 
+
+            // 3. Location
+            CountryTableSeeder::class,
             CityTableSeeder::class,
             LivesTableSeeder::class,
-            OrdersTableSeeder::class,
+
+            // 4. Artwork Types & Artworks
             ArtworkTypeTableSeeder::class,
             ArtworkTableSeeder::class,
+
+            // 5. Shop & Orders (depends on artworks)
             ShopListTableSeeder::class,
+            OrdersTableSeeder::class,
             OrderArtworkTableSeeder::class,
+
+            // 6. Events
             EventsTableSeeder::class,
             EventParticipationTableSeeder::class,
 
-
+            // 7. Reviews
+            ReviewTableSeeder::class,
         ]);
     }
 }

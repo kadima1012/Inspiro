@@ -1,57 +1,50 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+        <h2 class="font-bold text-2xl text-slate-900 leading-tight">
             {{ __('Add Artwork to Market') }}
         </h2>
     </x-slot>
 
     <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900">
-                    @if (session('error'))
-                        <div class="alert alert-danger">
-                            {{ session('error') }}
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            @if (session('error'))
+                <div class="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
+                    {{ session('error') }}
+                </div>
+            @endif
+
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-0">
+                    <!-- Artwork Preview -->
+                    <div class="p-6 lg:p-8">
+                        <img src="{{ \App\Helpers\StorageHelper::customUrl($artwork->filepath) }}" alt="{{ $artwork->art_Title }}" class="w-full rounded-xl object-cover">
+                    </div>
+
+                    <!-- Details & Form -->
+                    <div class="p-6 lg:p-8 flex flex-col justify-center">
+                        <div class="mb-6">
+                            <h3 class="text-2xl font-bold text-slate-900 mb-2">{{ $artwork->art_Title }}</h3>
+                            <p class="text-slate-600 text-sm mb-2">{{ $artwork->art_Description }}</p>
+                            <p class="text-slate-400 text-xs">Created: {{ $artwork->art_creation_date }}</p>
                         </div>
-                    @endif
 
-                    <div>
-                        <label for="art_Title" class="block font-medium text-sm text-gray-700">{{ __('Title') }}</label>
-                        <p>{{ $artwork->art_Title }}</p>
-                    </div>
-
-                    <div class="mt-4">
-                        <label for="art_Description" class="block font-medium text-sm text-gray-700">{{ __('Description') }}</label>
-                        <p>{{ $artwork->art_Description }}</p>
-                    </div>
-
-                    <div class="mt-4">
-                        <label for="art_creation_date" class="block font-medium text-sm text-gray-700">{{ __('Creation Date') }}</label>
-                        <p>{{ $artwork->art_creation_date }}</p>
-                    </div>
-
-                    <div class="mt-4">
-                        <label class="block font-medium text-sm text-gray-700">{{ __('Artwork Image') }}</label>
-                        <img src="{{ \App\Helpers\StorageHelper::customUrl($artwork->filepath) }}" alt="{{ $artwork->art_Title }}" class="mt-2 rounded-lg">
-                    </div>
-
-                    <div class="flex items-center justify-end mt-4">
-                        <form action="{{ route('artwork.addToMarket', $artwork->idArt) }}" method="POST">
+                        <form action="{{ route('artwork.addToMarket', $artwork->idArt) }}" method="POST" class="space-y-5">
                             @csrf
 
-                            <p>{{ __('Choose a price for your artwork') }}</p>
-                            <input id="item_price" class="block mt-1 w-full" type="number" step="0.01" min="0" max="99999999.99" name="item_price" required />
-
-                            <div class="mt-4">
-                                <label for="quantity_for_sale" class="block font-medium text-sm text-gray-700">{{ __('Quantity for Sale') }}</label>
-                                <input id="quantity_for_sale" class="block mt-1 w-full" type="number" name="quantity_for_sale" min="1" max="{{ $artwork->art_quantity }}" required />
+                            <div>
+                                <label for="item_price" class="block text-sm font-medium text-slate-700 mb-1">Price (EUR)</label>
+                                <input id="item_price" type="number" step="0.01" min="0" max="99999999.99" name="item_price" required class="w-full rounded-lg border-slate-300 focus:border-amber-500 focus:ring-amber-500 transition-all duration-300">
                             </div>
 
-                            <div class="flex items-center justify-end mt-4">
-                                <x-primary-button class="ml-4">
-                                    {{ __('Add to Market') }}
-                                </x-primary-button>
+                            <div>
+                                <label for="quantity_for_sale" class="block text-sm font-medium text-slate-700 mb-1">{{ __('Quantity for Sale') }}</label>
+                                <input id="quantity_for_sale" type="number" name="quantity_for_sale" min="1" max="{{ $artwork->art_quantity }}" required class="w-full rounded-lg border-slate-300 focus:border-amber-500 focus:ring-amber-500 transition-all duration-300">
+                                <p class="text-xs text-slate-400 mt-1">Maximum: {{ $artwork->art_quantity }} pieces</p>
                             </div>
+
+                            <button type="submit" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-900 font-semibold py-3 rounded-lg transition-all duration-300">
+                                {{ __('Add to Market') }}
+                            </button>
                         </form>
                     </div>
                 </div>

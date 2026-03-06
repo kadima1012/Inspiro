@@ -1,3 +1,4 @@
+const colors = require('tailwindcss/colors');
 
 module.exports = {
   content: [
@@ -7,11 +8,16 @@ module.exports = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['Figtree', 'sans-serif'],
+      },
       colors: {
-        primary: '#ff0000',
-        secondary: '#00ff00',
+        primary: colors.amber,
+        secondary: colors.slate,
       },
     },
   },
-  plugins: [],
+  plugins: [
+    require('@tailwindcss/forms'),
+  ],
 };

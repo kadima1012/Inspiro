@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Collection;
 
 class OrderArtwork extends Model
 {
@@ -11,64 +13,50 @@ class OrderArtwork extends Model
 
     protected $table = 'order_artwork';
 
-    protected $primaryKey = 'id'; 
+    protected $primaryKey = 'id';
 
-    public $incrementing = true; 
+    public $incrementing = true;
 
     protected $fillable = [
         'idArt',
         'idOrder',
-        'quantity_to_order'
+        'quantity_to_order',
     ];
 
-    public function artwork()
+    public function artwork(): BelongsTo
     {
         return $this->belongsTo(Artwork::class, 'idArt');
     }
 
-    public function order()
+    public function order(): BelongsTo
     {
         return $this->belongsTo(Order::class, 'idOrder');
     }
 
-    public function checkQuantityToOrder($idArt)
-    {
-        $orderItems = $this->where('idArt', $idArt)->get();
-
-        foreach ($orderItems as $item) {
-            $artwork = $item->artwork;
-
-            if ($item->quantity_to_order > $artwork->quantity_for_sale) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    public static function updateOrderArtwork($idArt, $idOrder, $quantity)
+    public static function updateOrderArtwork(int $idArt, int $idOrder, int $quantity): ?self
     {
         $orderArtwork = self::where('idArt', $idArt)
-                            ->where('idOrder', $idOrder)
-                            ->first();
-    
+            ->where('idOrder', $idOrder)
+            ->first();
+
         if ($orderArtwork) {
-            $orderArtwork->update(['quantity_to_order' => $orderArtwork->quantity_to_order + $quantity]);
+            $orderArtwork->update([
+                'quantity_to_order' => $orderArtwork->quantity_to_order + $quantity,
+            ]);
+
             return $orderArtwork;
         }
-    
+
         return null;
     }
-    
-    public static function findByArtId($idArt)
+
+    public static function findByArtId(int $idArt): Collection
     {
-    return self::where('idArt', $idArt)->get();
+        return self::where('idArt', $idArt)->get();
     }
 
-    public static function findByOrderId($idOrder)
+    public static function findByOrderId(int $idOrder): Collection
     {
-    return self::where('idOrder', $idOrder)->get();
+        return self::where('idOrder', $idOrder)->get();
     }
-
-
 }

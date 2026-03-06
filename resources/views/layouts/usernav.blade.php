@@ -1,142 +1,85 @@
-<nav x-data="{ open: false }" class="bg-red-600 border-b border-gray-100">
-    <!-- Primary Navigation Menu -->
+<nav x-data="{ open: false }" class="bg-slate-900/95 backdrop-blur-sm border-b border-slate-700 sticky top-0 z-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
-            <div class="flex">
+            <div class="flex items-center">
                 <!-- Logo -->
                 <div class="shrink-0 flex items-center">
-                    <a href="{{ route('welcome') }}">
-                        <x-application-logo class="block h-9 w-auto fill-current text-gray-800" />
+                    <a href="{{ route('welcome') }}" class="flex items-center gap-2">
+                        <x-application-logo class="block h-8 w-auto" />
+                        <span class="text-amber-400 font-bold text-xl hidden sm:block">Inspiro</span>
                     </a>
                 </div>
 
                 <!-- Navigation Links -->
-                <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-
-                    <x-nav-link :href="route('user.profile', ['username' => $user_username])" :active="request()->routeIs('user.profile')">
-                        {{ __('Profile') }}
-                    </x-nav-link>
-                    <x-nav-link :href="route('user.gallery', ['username' => $user_username])" :active="request()->routeIs('user.gallery')">
-                        {{ __('Gallery') }}
-                    </x-nav-link>
-                    <x-nav-link :href="route('user.shop', ['username' => $user_username])" :active="request()->routeIs('user.shop')">
-                        {{ __('Shop') }}
-                    </x-nav-link>
+                <div class="hidden sm:flex sm:items-center sm:ml-8 space-x-1">
+                    <a href="{{ route('user.profile', ['username' => $user_username]) }}" class="px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300 {{ request()->routeIs('user.profile') ? 'text-amber-400 bg-slate-800' : 'text-gray-300 hover:text-amber-400 hover:bg-slate-800' }}">Profile</a>
+                    <a href="{{ route('user.gallery', ['username' => $user_username]) }}" class="px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300 {{ request()->routeIs('user.gallery') ? 'text-amber-400 bg-slate-800' : 'text-gray-300 hover:text-amber-400 hover:bg-slate-800' }}">Gallery</a>
+                    <a href="{{ route('user.shop', ['username' => $user_username]) }}" class="px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300 {{ request()->routeIs('user.shop') ? 'text-amber-400 bg-slate-800' : 'text-gray-300 hover:text-amber-400 hover:bg-slate-800' }}">Shop</a>
                 </div>
             </div>
 
-            <!-- Profile links -->
-            <div class="hidden sm:-my-px sm:ms-10 sm:flex flex items-center flex-item-right">
-                <!-- Image for Basket -->
-                <a href="{{ route('basket') }}" class="ml-4 mr-6 flex-shrink-0 flex items-center">
-                    <img src="{{ asset('img/basket.png') }}" class="h-6 w-6" alt="Basket">
+            <!-- Right Side -->
+            <div class="hidden sm:flex items-center space-x-3">
+                <a href="{{ route('basket') }}" class="text-gray-300 hover:text-amber-400 transition-colors duration-300 p-2">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"/></svg>
                 </a>
-                &nbsp;
                 @if (Route::has('login'))
-                    <nav class="">
-                        @auth
-                            <a
-                                href="{{ url('/dashboard') }}"
-                                class="bg-white rounded-md px-3 py-2 text-black ring-1 ring-black transition hover:text-black/70 focus:outline-none focus-visible:ring-[#FF2D20]"
-                            >
-                                Dashboard
-                            </a>
-                        @else
-                            <a
-                                href="{{ route('login') }}"
-                                class="bg-white rounded-md px-3 py-2 text-black ring-1 ring-black transition hover:text-black/70 focus:outline-none focus-visible:ring-[#FF2D20]"
-                            >
-                                Log in
-                            </a>
-                            &nbsp;
-                            @if (Route::has('register'))
-                                <a
-                                    href="{{ route('register') }}"
-                                    class="bg-white rounded-md px-3 py-2 text-black ring-1 ring-black transition hover:text-black/70 focus:outline-none focus-visible:ring-[#FF2D20]"
-                                >
-                                    Register
-                                </a>
-                            @endif
-                        @endauth
-                    </nav>
+                    @auth
+                        <a href="{{ url('/dashboard') }}" class="bg-amber-500 hover:bg-amber-600 text-slate-900 font-semibold px-4 py-2 rounded-lg text-sm transition-all duration-300">Dashboard</a>
+                    @else
+                        <a href="{{ route('login') }}" class="text-gray-300 hover:text-white px-3 py-2 text-sm font-medium transition-colors duration-300">Log in</a>
+                        @if (Route::has('register'))
+                            <a href="{{ route('register') }}" class="bg-amber-500 hover:bg-amber-600 text-slate-900 font-semibold px-4 py-2 rounded-lg text-sm transition-all duration-300">Register</a>
+                        @endif
+                    @endauth
                 @endif
             </div>
 
             <!-- Hamburger -->
-            <div class="-mr-2 flex items-center sm:hidden">
-                <button @click="open = ! open" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 focus:text-gray-500 transition duration-150 ease-in-out">
+            <div class="flex items-center sm:hidden">
+                <button @click="open = !open" class="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-slate-800 transition-all duration-300">
                     <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                        <path :class="{'hidden': open, 'inline-flex': ! open }" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                        <path :class="{'hidden': ! open, 'inline-flex': open }" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        <path :class="{'hidden': open, 'inline-flex': !open}" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        <path :class="{'hidden': !open, 'inline-flex': open}" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- Responsive Navigation Menu -->
-    <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
-        <div class="pt-2 pb-3 space-y-1">
-            <x-responsive-nav-link :href="route('user.profile', ['username' => $user_username])" :active="request()->routeIs('user.profile')">
-                {{ __('Profile') }}
-            </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('user.gallery', ['username' => $user_username])" :active="request()->routeIs('user.gallery')">
-                {{ __('Gallery') }}
-            </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('user.shop', ['username' => $user_username])" :active="request()->routeIs('user.shop')">
-                {{ __('Shop') }}
-            </x-responsive-nav-link>
+    <!-- Responsive Menu -->
+    <div :class="{'block': open, 'hidden': !open}" class="hidden sm:hidden bg-slate-900 border-t border-slate-700">
+        <div class="px-2 pt-2 pb-3 space-y-1">
+            <a href="{{ route('user.profile', ['username' => $user_username]) }}" class="block px-3 py-2 rounded-lg text-base font-medium {{ request()->routeIs('user.profile') ? 'text-amber-400 bg-slate-800' : 'text-gray-300 hover:text-amber-400 hover:bg-slate-800' }} transition-all duration-300">Profile</a>
+            <a href="{{ route('user.gallery', ['username' => $user_username]) }}" class="block px-3 py-2 rounded-lg text-base font-medium {{ request()->routeIs('user.gallery') ? 'text-amber-400 bg-slate-800' : 'text-gray-300 hover:text-amber-400 hover:bg-slate-800' }} transition-all duration-300">Gallery</a>
+            <a href="{{ route('user.shop', ['username' => $user_username]) }}" class="block px-3 py-2 rounded-lg text-base font-medium {{ request()->routeIs('user.shop') ? 'text-amber-400 bg-slate-800' : 'text-gray-300 hover:text-amber-400 hover:bg-slate-800' }} transition-all duration-300">Shop</a>
         </div>
 
-        <!-- Responsive Settings Options -->
-        <div class="pt-4 pb-1 border-t border-gray-200">
+        <div class="px-4 py-4 border-t border-slate-700">
+            <a href="{{ route('basket') }}" class="flex items-center gap-2 text-gray-300 hover:text-amber-400 mb-3 transition-colors duration-300">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"/></svg>
+                Basket
+            </a>
             @if (Route::has('login'))
-                    <nav class="">
-                        @auth
-                            <div class="px-4">
-                                <div class="font-medium text-base text-gray-800">{{ Auth::user()->user_username }}</div>
-                                <div class="font-medium text-sm text-gray-500">{{ Auth::user()->email }}</div>
-                            </div>
-
-                            <x-responsive-nav-link :href="route('basket')">
-                                <img src="{{ asset('img/basket.png') }}" class="h-6 w-6" alt="{{ __('Basket') }}">
-                            </x-responsive-nav-link>
-
-                            <div class="mt-3 space-y-1">
-                                <x-responsive-nav-link :href="route('dashboard')">
-                                    {{ __('Dashboard') }}
-                                </x-responsive-nav-link>
-
-                                <!-- Authentication -->
-                                <form method="POST" action="{{ route('logout') }}">
-                                    @csrf
-
-                                    <x-responsive-nav-link :href="route('logout')"
-                                            onclick="event.preventDefault();
-                                                        this.closest('form').submit();">
-                                        {{ __('Log Out') }}
-                                    </x-responsive-nav-link>
-                                </form>
-                            </div>
-                        @else
-                            <x-responsive-nav-link :href="route('basket')">
-                                <img src="{{ asset('img/basket.png') }}" class="h-6 w-6" alt="{{ __('Basket') }}">
-                            </x-responsive-nav-link>
-                            <div class="mt-3 space-y-1">
-                                <!-- Authentication -->
-                                <x-responsive-nav-link :href="route('login')">
-                                    {{ __('Login') }}
-                                </x-responsive-nav-link>
-
-                                @if (Route::has('register'))
-                                    <x-responsive-nav-link :href="route('register')">
-                                        {{ __('Register') }}
-                                    </x-responsive-nav-link>
-                                @endif
-                            </div>
-                        @endauth
-                    </nav>
-                @endif
+                @auth
+                    <div class="mb-3">
+                        <p class="text-sm font-medium text-white">{{ Auth::user()->user_username }}</p>
+                        <p class="text-xs text-slate-400">{{ Auth::user()->email }}</p>
+                    </div>
+                    <a href="{{ route('dashboard') }}" class="block w-full text-center bg-amber-500 hover:bg-amber-600 text-slate-900 font-semibold px-4 py-2 rounded-lg text-sm mb-2 transition-all duration-300">Dashboard</a>
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit" class="block w-full text-left text-gray-300 hover:text-white px-3 py-2 text-sm transition-colors duration-300">Log Out</button>
+                    </form>
+                @else
+                    <div class="flex gap-2">
+                        <a href="{{ route('login') }}" class="flex-1 text-center border border-slate-600 text-gray-300 hover:text-white px-4 py-2 rounded-lg text-sm transition-all duration-300">Log in</a>
+                        @if (Route::has('register'))
+                            <a href="{{ route('register') }}" class="flex-1 text-center bg-amber-500 hover:bg-amber-600 text-slate-900 font-semibold px-4 py-2 rounded-lg text-sm transition-all duration-300">Register</a>
+                        @endif
+                    </div>
+                @endauth
+            @endif
         </div>
     </div>
 </nav>
