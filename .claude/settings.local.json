@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git clone https://github.com/kadima1012/Inspiro.git d:/Inspiro-temp)",
+      "Bash(cp -r d:/Inspiro-temp/* d:/Inspiro-temp/.* d:/Inspiro/)",
+      "Bash(rm -rf d:/Inspiro-temp)"
+    ]
+  }
+}
