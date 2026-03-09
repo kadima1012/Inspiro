@@ -25,7 +25,7 @@
                             <input type="hidden" name="quantity" x-bind:value="qty">
 
                             <div>
-                                <label for="quantity_to_order" class="block text-sm font-medium text-slate-700 mb-1">Quantity</label>
+                                <label for="_tquantityo_order" class="block text-sm font-medium text-slate-700 mb-1">Quantity</label>
                                 <input type="number" id="quantity_to_order" name="quantity_to_order" x-model="qty" value="1" min="1" max="{{ $artwork->shopItem()->quantity_for_sale }}" required class="w-full rounded-lg border-slate-300 focus:border-amber-500 focus:ring-amber-500 transition-all duration-300">
                                 <p class="text-xs text-slate-400 mt-1">Available: {{ $artwork->shopItem()->quantity_for_sale }}</p>
                             </div>
